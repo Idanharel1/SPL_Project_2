@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 /**
  * Manages the fusion of sensor data for simultaneous localization and mapping (SLAM).
  * Combines data from multiple sensors (e.g., LiDAR, camera) to build and update a global map.
@@ -7,6 +9,8 @@ package bgu.spl.mics.application.objects;
  */
 public class FusionSlam {
     // Singleton instance holder
+    private LandMark[] landMarks;
+    private ConcurrentLinkedQueue<Pose> poses;
     private static class FusionSlamHolder {
         // TODO: Implement singleton instance logic.
     }
