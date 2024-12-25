@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Callback;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.Camera;
 
 /**
@@ -18,8 +20,7 @@ public class CameraService extends MicroService {
      * @param camera The Camera object that this service will use to detect objects.
      */
     public CameraService(Camera camera) {
-        super("Change_This_Name");
-        // TODO Implement this
+        super("camera");
     }
 
     /**
@@ -29,6 +30,12 @@ public class CameraService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // TODO Implement this
+//        Callback callback = new Callback() {
+//            @Override
+//            public void call(Object c) {
+//
+//            }
+//        }
+//        this.subscribeBroadcast(TickBroadcast.class, );
     }
 }
