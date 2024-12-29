@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class FusionSlam {
     // Singleton instance holder
-    private LandMark[] landMarks;
+    private ConcurrentLinkedQueue<LandMark> landMarks;
     private ConcurrentLinkedQueue<Pose> poses;
     private static class FusionSlamHolder {
         // TODO: Implement singleton instance logic.

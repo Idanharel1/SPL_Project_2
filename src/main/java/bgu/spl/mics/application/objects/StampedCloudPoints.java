@@ -38,4 +38,6 @@ public class StampedCloudPoints {
     public void setCloudPoints(CloudPoint[] cloudPoints) {
         this.cloudPoints = cloudPoints;
     }
+
+
 }

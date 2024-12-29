@@ -43,4 +43,22 @@ private STATUS status;
     public void addDetectedObjectsList(StampedDetectedObjects object) {
         this.detectedObjectsList.add(object);
     }
+
+    public STATUS getStatus() {
+        return status;
+    }
+
+    public void setStatus(STATUS status) {
+        this.status = status;
+    }
+    public StampedDetectedObjects getStampedByTime(int time){
+        StampedDetectedObjects result = null;
+        for (StampedDetectedObjects stamped : this.getDetectedObjectsList()){
+            if(stamped.getTime() == time){
+                result = stamped;
+                break;
+            }
+        }
+        return result;
+    }
 }

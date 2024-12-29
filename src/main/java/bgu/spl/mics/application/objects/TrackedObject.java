@@ -6,23 +6,23 @@ package bgu.spl.mics.application.objects;
  * time of tracking, and coordinates in the environment.
  */
 public class TrackedObject {
-    private int id;
+    private String id;
     private int time;
     private String description;
     private CloudPoint[] coordinates;
 
-    public TrackedObject(int id, int time, String description, CloudPoint[] coordinates) {
+    public TrackedObject(String id, int time, String description, CloudPoint[] coordinates) {
         this.id = id;
         this.time = time;
         this.description = description;
         this.coordinates = coordinates;
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 

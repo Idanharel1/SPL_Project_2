@@ -11,7 +11,6 @@ public class TimeService extends MicroService {
     private final int TICKTIME;
     private final int DURATION;
     private int tickCounter;
-    private TickBroadcast tickBroadcast;
     /**
      * Constructor for TimeService.
      *
@@ -23,7 +22,6 @@ public class TimeService extends MicroService {
         this.TICKTIME = TickTime;
         this.DURATION = Duration;
         this.tickCounter = 0;
-        this.tickBroadcast = new TickBroadcast(this.getName());
     }
 
     public int getTickCounter() {
@@ -37,8 +35,8 @@ public class TimeService extends MicroService {
     @Override
     protected void initialize() throws InterruptedException {
         for (int i = 0; i < this.DURATION; i++) {
-            this.sendBroadcast(this.tickBroadcast);
             this.tickCounter++;
+            this.sendBroadcast(new TickBroadcast(this.getName(),this.tickCounter));
             Thread.sleep(this.TICKTIME);
             }
         this.terminate();

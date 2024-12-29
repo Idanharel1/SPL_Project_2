@@ -2,41 +2,21 @@ package bgu.spl.mics.application.messages;
 
 import bgu.spl.mics.Event;
 import bgu.spl.mics.application.objects.DetectedObject;
+import bgu.spl.mics.application.objects.StampedDetectedObjects;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class DetectedObjectsEvent implements Event<String> {
-    private String senderName;
-    private int time;
-    private ConcurrentLinkedQueue<DetectedObject> detectedObjectsList;
+    private StampedDetectedObjects stampedDetectedObjects;
 
-    public DetectedObjectsEvent(String senderName, int time, ConcurrentLinkedQueue<DetectedObject> detectedObjectsList) {
-        this.senderName = senderName;
-        this.time = time;
-        this.detectedObjectsList = detectedObjectsList;
+    public DetectedObjectsEvent(StampedDetectedObjects stampedDetectedObjects) {
+        this.stampedDetectedObjects = stampedDetectedObjects;
+    }
+    public StampedDetectedObjects getStampedDetectedObjects() {
+        return stampedDetectedObjects;
     }
 
-    public String getSenderName() {
-        return senderName;
-    }
-
-    public void setSenderName(String senderName) {
-        this.senderName = senderName;
-    }
-
-    public int getTime() {
-        return time;
-    }
-
-    public void setTime(int time) {
-        this.time = time;
-    }
-
-    public ConcurrentLinkedQueue<DetectedObject> getDetectedObjectsList() {
-        return detectedObjectsList;
-    }
-
-    public void setDetectedObjectsList(ConcurrentLinkedQueue<DetectedObject> detectedObjectsList) {
-        this.detectedObjectsList = detectedObjectsList;
+    public void setStampedDetectedObjectsList(StampedDetectedObjects stampedDetectedObjects) {
+        this.stampedDetectedObjects = stampedDetectedObjects;
     }
 }
