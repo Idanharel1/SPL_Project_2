@@ -1,5 +1,7 @@
 package bgu.spl.mics;
 
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
+
 import java.util.HashMap;
 
 /**
@@ -142,6 +144,7 @@ public abstract class MicroService implements Runnable {
      * message.
      */
     protected final void terminate() {
+        this.sendBroadcast(new TerminatedBroadcast(this.getName()));
         this.terminated = true;
     }
 

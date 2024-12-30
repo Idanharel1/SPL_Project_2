@@ -27,7 +27,7 @@ public class CameraService extends MicroService {
      */
     private Camera camera;
     public CameraService(Camera camera) {
-        super("camera");
+        super("Camera");
         this.camera = camera;
     }
 
@@ -47,15 +47,24 @@ public class CameraService extends MicroService {
                 }
                 if(!stampedList.getDetectedObjectsList().isEmpty()){
                     sendEvent(new DetectedObjectsEvent(stampedList));
+                    //returns future , can be read result later
                 }
             }
             else {
-                terminate();;
-                sendBroadcast(new CrashedBroadcast("Camera " + camera.getId() + "got crashed"));
+                terminate();
+                sendBroadcast(new CrashedBroadcast("Camera " + this.getName() + "got crashed"));
             }
         });
-        this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{terminate();});
-        this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{terminate();});
+        this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
+            if((terminate.getSenderId().equals("TimeService")) || (terminate.getSenderId().equals("LidarWorker")) || (terminate.getSenderId().equals("FusionSlam"))){
+                terminate();
+            }
+        });
+        this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("LidarWorker")) || (crashed.getSenderId().equals("FusionSlam"))){
+                terminate();
+            }
+        });
 
     }
 }

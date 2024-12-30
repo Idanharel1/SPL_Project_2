@@ -1,10 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.CrashedBroadcast;
-import bgu.spl.mics.application.messages.DetectedObjectsEvent;
-import bgu.spl.mics.application.messages.TerminatedBroadcast;
-import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.*;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -25,7 +22,7 @@ public class LiDarService extends MicroService {
      * @param LiDarWorkerTracker A LiDAR Tracker worker object that this service will use to process data.
      */
     public LiDarService(LiDarWorkerTracker LiDarWorkerTracker) {
-        super("Lidar Worker");
+        super("LidarWorker");
         this.liDarWorkerTracker = liDarWorkerTracker;
     }
 
@@ -37,39 +34,59 @@ public class LiDarService extends MicroService {
     @Override
     protected void initialize() {
         this.subscribeEvent(DetectedObjectsEvent.class, (DetectedObjectsEvent detectedObjectEvent) ->{
-            int currentTime = detectedObjectEvent.getStampedDetectedObjects().getTime();
-            for (DetectedObject object : detectedObjectEvent.getStampedDetectedObjects().getDetectedObjectsList()) {
-                CloudPoint[] coordinates = LiDarDataBase.getInstance().getCloudPointById(object.getId()).getCloudPoints();
-                TrackedObject trackedObject = new TrackedObject(object.getId(),currentTime, object.getDescription(),coordinates);
-            }
-
-        });
-
-
-
-
-
-
-        this.subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) -> {
-            if(liDarWorkerTracker.getStatus() == STATUS.UP) {
-                int realTime = tick.getTickCounter();
-                ConcurrentLinkedQueue<StampedDetectedObjects> stampedList = new ConcurrentLinkedQueue<StampedDetectedObjects>();
-                for (StampedDetectedObjects object : camera.getDetectedObjectsList()) {
-                    if (object.getTime() + camera.getFREQUENCY() == realTime) {
-                        stampedList.add(object);
-                    }
+            if(this.liDarWorkerTracker.getStatus() == STATUS.UP) {
+                int currentTime = detectedObjectEvent.getStampedDetectedObjects().getTime();
+                String result = "Lidar handled event of objects ";
+                //filled queue of lastTrackedObject from queue we got from detectedObjectEvent and lidarDataBase data
+                for (DetectedObject object : detectedObjectEvent.getStampedDetectedObjects().getDetectedObjectsList()) {
+                    CloudPoint[] coordinates = LiDarDataBase.getInstance().getCloudPointById(object.getId()).getCloudPoints();
+                    TrackedObject trackedObject = new TrackedObject(object.getId(), currentTime, object.getDescription(), coordinates);
+                    this.liDarWorkerTracker.getLastTrackedObject().add(trackedObject);
+                    result = result + object.getId() + " ";
                 }
-                if(!stampedList.isEmpty()){
-                    sendEvent(new DetectedObjectsEvent(realTime, stampedList));
-                }
+                //sends true to camera's future
+                this.complete(detectedObjectEvent , result);
+                //suppose to send back coordinates to the lidarDataBase
+
             }
             else {
-                terminate();;
-                sendBroadcast(new CrashedBroadcast("Lidarservice " + liDarWorkerTracker.getId() + "got crashed"));
+                terminate();
+                sendBroadcast(new CrashedBroadcast("Lidarservice " + this.getName() + "got crashed"));
             }
         });
-        this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{terminate();});
-        this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{terminate();});
+        this.subscribeBroadcast(TickBroadcast.class , (TickBroadcast tickBroadcast)->{
+            if(liDarWorkerTracker.getStatus() == STATUS.UP) {
+                int currentTime = tickBroadcast.getTickCounter();
+                if (!this.liDarWorkerTracker.getLastTrackedObject().isEmpty()) {
+                    ConcurrentLinkedQueue<TrackedObject> trackedObjectsToSend = new ConcurrentLinkedQueue<>();
+                    for(TrackedObject objectInTime : this.liDarWorkerTracker.getLastTrackedObject()){
+                        if (objectInTime.getTime() + this.liDarWorkerTracker.getFREQUENCY() == currentTime){
+                            trackedObjectsToSend.add(objectInTime);
+                            this.liDarWorkerTracker.getLastTrackedObject().remove(objectInTime);
+                        }
+                    }
+                    if(!trackedObjectsToSend.isEmpty()) {
+                        this.sendEvent(new TrackedObjectsEvent(trackedObjectsToSend));
+                    }
+                }
+                //takes the list of tracked objects and send tracked broadcast
+
+            }
+            else {
+                terminate();
+                sendBroadcast(new CrashedBroadcast("LidarWorker " + liDarWorkerTracker.getId() + "got crashed"));
+            }
+        });
+        this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
+            if((terminate.getSenderId().equals("TimeService") || (terminate.getSenderId().equals("FusionSlam")))){
+                terminate();
+            }
+        });
+        this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            if((crashed.getSenderId().equals("TimeService") || (crashed.getSenderId().equals("FusionSlam")))){
+                terminate();
+            }
+        });
 
     }
 }
