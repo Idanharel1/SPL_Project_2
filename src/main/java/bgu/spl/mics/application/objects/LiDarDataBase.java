@@ -1,5 +1,16 @@
 package bgu.spl.mics.application.objects;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -8,19 +19,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class LiDarDataBase {
     private ConcurrentLinkedQueue<StampedCloudPoints> cloudPoints;
+    private final boolean initialized; //to make sure lidar database is initialized only once
 
     private static class SingletonHolder{
-        private static LiDarDataBase instance = new LiDarDataBase();
-    }
-    private LiDarDataBase(){
-        this.cloudPoints = new ConcurrentLinkedQueue<>();
-    }
-    public static LiDarDataBase getInstance(){
-        return SingletonHolder.instance;
+        private static final LiDarDataBase instance = new LiDarDataBase();
     }
 
-    public LiDarDataBase(ConcurrentLinkedQueue<StampedCloudPoints> cloudPoints) {
-        this.cloudPoints = cloudPoints;
+    private LiDarDataBase() {
+        this.cloudPoints = new ConcurrentLinkedQueue<>();
+        this.initialized = false;
+    }
+
+    public static LiDarDataBase getInstance(){
+        return SingletonHolder.instance;
     }
 
     public ConcurrentLinkedQueue<StampedCloudPoints> getCloudPoints() {
@@ -51,8 +62,43 @@ public class LiDarDataBase {
 
 
     public static LiDarDataBase getInstance(String filePath) {
-        // TODO: Implement this // parseJSON to LIDARDB using filepath
-        return null;
+        LiDarDataBase instance = getInstance();
+        if (instance.initialized) {
+            throw new IllegalStateException("LiDarDataBase has already been initialized.");
+        }
+        Gson gson = new Gson();
+        String lidarPath = "";
+        try (FileReader configReader = new FileReader(filePath)) {
+            JsonObject configJson = gson.fromJson(configReader, JsonObject.class);
+            lidarPath = configJson.get("LiDarWorkers").getAsJsonObject().get("lidars_data_path").getAsString();
+            Path configPath = Paths.get(filePath).getParent();
+            lidarPath = configPath.resolve(lidarPath).toString();
+            try (FileReader lidarReader = new FileReader(lidarPath)) {
+                JsonArray lidarJson = gson.fromJson(lidarReader, JsonArray.class);
+
+                Iterator jsonIter = lidarJson.iterator();
+                System.out.println(lidarJson.toString());
+                while (jsonIter.hasNext()){
+                    JsonObject object = (JsonObject) jsonIter.next();
+
+
+                    ArrayList<CloudPoint> cloudPointsList = new ArrayList<CloudPoint>();
+                    for (JsonElement cloudPointArray : object.get("cloudPoints").getAsJsonArray()){
+                        double x = cloudPointArray.getAsJsonArray().get(0).getAsDouble();
+                        double y = cloudPointArray.getAsJsonArray().get(1).getAsDouble();
+                        cloudPointsList.add(new CloudPoint(x,y));
+                    }
+                    CloudPoint[] cloudPointsArray = new CloudPoint[cloudPointsList.size()];
+                    for (int i = 0; i < cloudPointsArray.length; i++) {
+                        cloudPointsArray[i] = cloudPointsList.get(i);
+                    }
+                    instance.cloudPoints.add(new StampedCloudPoints(object.get("id").getAsString(), object.get("time").getAsInt(), cloudPointsArray));
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return instance;
     }
 
 }

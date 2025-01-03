@@ -166,7 +166,7 @@ public abstract class MicroService implements Runnable {
         messageBus.register(this);
         try {
             initialize();
-            while (!terminated) {
+            while (!terminated) { //maybe we need to add a synchronized method to ask if thread is terminated so the terminated won't be read from the cache and might be wrong
                 Message m = messageBus.awaitMessage(this);
                 Callback c = this.callbackHashMap.get(m.getClass());
                 c.call(m);
@@ -175,7 +175,7 @@ public abstract class MicroService implements Runnable {
         catch (InterruptedException ignored) {
             messageBus.unregister(this);
             terminate();
-            Thread.currentThread().interrupt();
+            Thread.currentThread().interrupt();// after the thread was interrupted the flag turns back to false, so we change it to true for other functions to call it to know it was interrupted - we don't have to do it because were not going back to check to check the loop condition
             //asking to terminate program so we'll stop the thread and might return null
         }
     }

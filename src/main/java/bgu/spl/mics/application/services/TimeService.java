@@ -37,7 +37,7 @@ public class TimeService extends MicroService {
         for (int i = 0; i < this.DURATION; i++) {
             this.tickCounter++;
             this.sendBroadcast(new TickBroadcast(this.getName(),this.tickCounter));
-            Thread.sleep(this.TICKTIME);
+            Thread.sleep(this.TICKTIME*1000);
             }
         this.terminate();
         Thread.currentThread().interrupt();

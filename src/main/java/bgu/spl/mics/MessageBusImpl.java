@@ -1,5 +1,7 @@
 package bgu.spl.mics;
 
+import bgu.spl.mics.application.objects.LiDarDataBase;
+
 import java.util.HashMap;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -12,7 +14,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * All other methods and members you add the class must be private.
  */
 public class MessageBusImpl implements MessageBus {
-	private static volatile MessageBusImpl instance;
 	//holds Queue per event / broadcast to know which microservices are registered to it
 	private HashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>> eventQueueHashMap;
 	private HashMap<Event<?>, Future> eventFutureHashMapHashMap;
@@ -23,15 +24,11 @@ public class MessageBusImpl implements MessageBus {
 	//what callback handles each event
 
 	private MessageBusImpl() {} // Private constructor to prevent instantiation
-	public static MessageBusImpl getInstance() {
-		if (instance == null) { // First check (no locking)
-			synchronized (MessageBusImpl.class) { // Synchronize for thread safety
-				if (instance == null) { // Second check (with locking)
-					instance = new MessageBusImpl();
-				}
-			}
-		}
-		return instance;
+	private static class SingletonHolder{
+		private static final MessageBusImpl instance = new MessageBusImpl();
+	}
+	public static MessageBusImpl getInstance(){
+		return MessageBusImpl.SingletonHolder.instance;
 	}
 
 	@Override

@@ -11,12 +11,19 @@ public class StatisticalFolder {
     private int numTrackedObjects;
     private int numLandmarks;
 
-    public StatisticalFolder(int systemRuntime, int numDetectedObjects, int numTrackedObjects, int numLandmarks) {
-        this.systemRuntime = systemRuntime;
-        this.numDetectedObjects = numDetectedObjects;
-        this.numTrackedObjects = numTrackedObjects;
-        this.numLandmarks = numLandmarks;
+    private static class SingletonHolder{
+        private static final StatisticalFolder instance = new StatisticalFolder();
     }
+    public static StatisticalFolder getInstance(){
+        return StatisticalFolder.SingletonHolder.instance;
+    }
+
+//    public StatisticalFolder(int systemRuntime, int numDetectedObjects, int numTrackedObjects, int numLandmarks) {
+//        this.systemRuntime = systemRuntime;
+//        this.numDetectedObjects = numDetectedObjects;
+//        this.numTrackedObjects = numTrackedObjects;
+//        this.numLandmarks = numLandmarks;
+//    }
 
     public int getSystemRuntime() {
         return systemRuntime;
