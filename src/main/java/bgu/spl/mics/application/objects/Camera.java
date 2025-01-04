@@ -10,12 +10,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Camera {
 private int id;
-private final int FREQUENCY = 2;
+private final int frequency;
 private ConcurrentLinkedQueue<StampedDetectedObjects> detectedObjectsList;
 private STATUS status;
 
-    public Camera(int id) {
+    public Camera(int id, int frequency) {
         this.id = id;
+        this.frequency = frequency;
         this.status = STATUS.UP;
         this.detectedObjectsList = new ConcurrentLinkedQueue<StampedDetectedObjects>();
     }
@@ -28,8 +29,8 @@ private STATUS status;
         this.id = id;
     }
 
-    public int getFREQUENCY() {
-        return FREQUENCY;
+    public int getFrequency() {
+        return frequency;
     }
 
     public ConcurrentLinkedQueue<StampedDetectedObjects> getDetectedObjectsList() {

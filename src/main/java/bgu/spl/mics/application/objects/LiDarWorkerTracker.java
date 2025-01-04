@@ -11,12 +11,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class LiDarWorkerTracker {
     private int id;
-    private final int FREQUENCY = 2;
+    private final int frequency;
     private STATUS status;
     private ConcurrentLinkedQueue<TrackedObject> lastTrackedObjects;
 
-    public LiDarWorkerTracker(int id){
+    public LiDarWorkerTracker(int id, int frequency){
         this.id = id;
+        this.frequency = frequency;
         this.status = STATUS.UP;
         this.lastTrackedObjects = new ConcurrentLinkedQueue<TrackedObject>();
     }
@@ -29,8 +30,8 @@ public class LiDarWorkerTracker {
         this.id = id;
     }
 
-    public int getFREQUENCY() {
-        return FREQUENCY;
+    public int getFrequency() {
+        return frequency;
     }
 
     public STATUS getStatus() {
