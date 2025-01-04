@@ -21,6 +21,12 @@ public class FusionSlam {
             return FusionSlam.FusionSlamHolder.instance;
         }
 
+    private FusionSlam() {
+        this.trackedObjects = new ConcurrentLinkedQueue<TrackedObject>();
+        this.poses = new ConcurrentLinkedQueue<Pose>();
+        this.landMarks = new ConcurrentLinkedQueue<LandMark>();
+    }
+
     public ConcurrentLinkedQueue<TrackedObject> getTrackedObjects() {
         return trackedObjects;
     }
@@ -43,15 +49,17 @@ public class FusionSlam {
         }
         this.notifyAll();
     }
-    public synchronized void addTrackedObject (ConcurrentLinkedQueue<TrackedObject> trackedObjects){
-        for (TrackedObject trackedObject : trackedObjects){
-            for (Pose pose : this.poses){
-                if (pose.getTime() == trackedObject.getTime()){
-                    addAsLandmark(trackedObject , pose);
+    public synchronized void addTrackedObject (ConcurrentLinkedQueue<TrackedObject> newTrackedObjects){
+        boolean foundPose = false;
+        for (TrackedObject trackedObject : newTrackedObjects){
+            for (Pose pose : this.poses) {
+                if (pose.getTime() == trackedObject.getTime()) {
+                    foundPose = true;
+                    addAsLandmark(trackedObject, pose);
                 }
-                else {
-                    this.trackedObjects.add(trackedObject);
-                }
+            }
+            if (!foundPose){
+                this.trackedObjects.add(trackedObject);
             }
         }
         this.notifyAll();

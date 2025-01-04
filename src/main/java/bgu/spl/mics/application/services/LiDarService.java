@@ -56,11 +56,11 @@ public class LiDarService extends MicroService {
         this.subscribeBroadcast(TickBroadcast.class , (TickBroadcast tickBroadcast)->{
             if(liDarWorkerTracker.getStatus() == STATUS.UP) {
                 int currentTime = tickBroadcast.getTickCounter();
-                if (LiDarDataBase.getInstance().isFinishedReading(currentTime - this.liDarWorkerTracker.getFREQUENCY())){
+                if (LiDarDataBase.getInstance().isFinishedReading(currentTime - this.liDarWorkerTracker.getFrequency())){
                     this.liDarWorkerTracker.setStatus(STATUS.DOWN);
                     terminate();
                 }
-                else if (LiDarDataBase.getInstance().isErrorInTime(currentTime - this.liDarWorkerTracker.getFREQUENCY())){
+                else if (LiDarDataBase.getInstance().isErrorInTime(currentTime - this.liDarWorkerTracker.getFrequency())){
                     this.liDarWorkerTracker.setStatus(STATUS.ERROR);
                     sendBroadcast(new CrashedBroadcast("Sensor LidarWorker disconnected"));
                     terminate();
@@ -69,7 +69,7 @@ public class LiDarService extends MicroService {
                     if (!this.liDarWorkerTracker.getLastTrackedObject().isEmpty()) {
                         ConcurrentLinkedQueue<TrackedObject> trackedObjectsToSend = new ConcurrentLinkedQueue<>();
                         for (TrackedObject objectInTime : this.liDarWorkerTracker.getLastTrackedObject()) {
-                            if (objectInTime.getTime() + this.liDarWorkerTracker.getFREQUENCY() == currentTime) {
+                            if (objectInTime.getTime() + this.liDarWorkerTracker.getFrequency() == currentTime) {
                                 trackedObjectsToSend.add(objectInTime);
                                 this.liDarWorkerTracker.getLastTrackedObject().remove(objectInTime);
                             }

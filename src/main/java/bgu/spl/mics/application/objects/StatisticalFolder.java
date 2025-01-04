@@ -13,6 +13,13 @@ public class StatisticalFolder {
     private AtomicInteger numTrackedObjects;
     private AtomicInteger numLandmarks;
 
+    private StatisticalFolder() {
+        this.systemRuntime = new AtomicInteger(0);
+        this.numDetectedObjects = new AtomicInteger(0);
+        this.numTrackedObjects = new AtomicInteger(0);
+        this.numLandmarks = new AtomicInteger(0);
+    }
+
     private static class SingletonHolder{
         private static final StatisticalFolder instance = new StatisticalFolder();
     }

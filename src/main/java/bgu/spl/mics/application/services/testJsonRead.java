@@ -20,14 +20,14 @@ public class testJsonRead {
         public static void main(String[] args) {
             System.out.println("Hello");
 
-//            Gson gson = new Gson();
-//            try (FileReader reader = new FileReader("example input/configuration_file.json")) {
-//                JsonObject jsonObject = gson.fromJson(reader , JsonObject.class);
-//                JsonObject name = jsonObject.get("Cameras").getAsJsonObject();
-//                System.out.println("$$$ " + name.get("CamerasConfigurations").getAsJsonArray().get(0).getAsJsonObject().get("frequency").toString());
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+            Gson gson = new Gson();
+            try (FileReader reader = new FileReader("example input/configuration_file.json")) {
+                JsonObject jsonObject = gson.fromJson(reader , JsonObject.class);
+                JsonObject name = jsonObject.get("Cameras").getAsJsonObject();
+                System.out.println("$$$ " + name.get("CamerasConfigurations").getAsJsonArray().get(0).getAsJsonObject().get("frequency").toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
             Gson gson = new Gson();
             String lidarPath = "";

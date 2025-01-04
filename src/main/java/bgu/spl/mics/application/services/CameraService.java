@@ -45,7 +45,7 @@ public class CameraService extends MicroService {
                 else {
                     int currentTime = tick.getTickCounter();
                     StampedDetectedObjects stampedList = new StampedDetectedObjects(currentTime);
-                    for (DetectedObject object : camera.getStampedByTime(currentTime - camera.getFREQUENCY()).getDetectedObjectsList()) {
+                    for (DetectedObject object : camera.getStampedByTime(currentTime - camera.getFrequency()).getDetectedObjectsList()) {
                         if (object.getId() == "ERROR"){
                             this.camera.setStatus(STATUS.ERROR);
                             sendBroadcast(new CrashedBroadcast("Camera disconnected"));

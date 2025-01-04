@@ -1,6 +1,5 @@
-package bgu.spl.mics;
+package bgu.spl.mics.application.objects;
 
-import bgu.spl.mics.application.objects.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -12,7 +11,9 @@ import static org.junit.jupiter.api.Assertions.*;
 public class FusionSlamTest {
     private FusionSlam fusionSlam;
     private TrackedObject trackedObject;
-    private Pose pose;
+    private Pose pose1;
+    private Pose pose2;
+
 
     @BeforeEach
     public void setUp() {
@@ -23,13 +24,15 @@ public class FusionSlamTest {
                 new CloudPoint(2.0, 2.0)
         };
         trackedObject = new TrackedObject("test-object", 1, "Test Object", coordinates);
-        pose = new Pose(0.0f, 0.0f, 90.0f, 1); // 90 degree rotation
+        pose1 = new Pose(4.0f, 0.0f, 90.0f, 1); // 90 degree rotation
+        pose2 = new Pose(4.0f, 0.0f, 90.0f, 2); // 90 degree rotation
+
     }
 
     @Test
     public void testTransformTrackedObjectToLandmark() {
         // Add test pose and tracked object
-        fusionSlam.addPose(pose);
+        fusionSlam.addPose(pose1);
         ConcurrentLinkedQueue<TrackedObject> objects = new ConcurrentLinkedQueue<>();
         objects.add(trackedObject);
         fusionSlam.addTrackedObject(objects);
@@ -50,14 +53,15 @@ public class FusionSlamTest {
 
         // Check coordinate transformation (90 degree rotation should swap x,y)
         CloudPoint firstPoint = landmark.getCoordinates().peek();
-        assertEquals(-1.0, firstPoint.getY(), 0.01, "Y coordinate should be transformed correctly");
-        assertEquals(1.0, firstPoint.getX(), 0.01, "X coordinate should be transformed correctly");
+        assertEquals(1.0, firstPoint.getY(), 0.01, "Y coordinate should be transformed correctly");
+        assertEquals(3.0, firstPoint.getX(), 0.01, "X coordinate should be transformed correctly");
     }
 
     @Test
     public void testLandmarkAveraging() {
         // Test that when the same object is detected multiple times, coordinates are averaged
-        fusionSlam.addPose(pose);
+        fusionSlam.addPose(pose1);
+        fusionSlam.addPose(pose2);
 
         // First detection
         ConcurrentLinkedQueue<TrackedObject> objects1 = new ConcurrentLinkedQueue<>();
@@ -85,7 +89,7 @@ public class FusionSlamTest {
 
         assertNotNull(landmark);
         CloudPoint avgPoint = landmark.getCoordinates().peek();
-        assertEquals(-1.1, avgPoint.getY(), 0.01, "Y coordinate should be averaged");
-        assertEquals(1.1, avgPoint.getX(), 0.01, "X coordinate should be averaged");
+        assertEquals(1.1, avgPoint.getY(), 0.01, "Y coordinate should be averaged");
+        assertEquals(2.9, avgPoint.getX(), 0.01, "X coordinate should be averaged");
     }
 }
