@@ -51,30 +51,39 @@ public class LiDarService extends MicroService {
             }
             else {
                 terminate();
-                sendBroadcast(new CrashedBroadcast("Lidarservice " + this.getName() + "got crashed"));
             }
         });
         this.subscribeBroadcast(TickBroadcast.class , (TickBroadcast tickBroadcast)->{
             if(liDarWorkerTracker.getStatus() == STATUS.UP) {
                 int currentTime = tickBroadcast.getTickCounter();
-                if (!this.liDarWorkerTracker.getLastTrackedObject().isEmpty()) {
-                    ConcurrentLinkedQueue<TrackedObject> trackedObjectsToSend = new ConcurrentLinkedQueue<>();
-                    for(TrackedObject objectInTime : this.liDarWorkerTracker.getLastTrackedObject()){
-                        if (objectInTime.getTime() + this.liDarWorkerTracker.getFREQUENCY() == currentTime){
-                            trackedObjectsToSend.add(objectInTime);
-                            this.liDarWorkerTracker.getLastTrackedObject().remove(objectInTime);
+                if (LiDarDataBase.getInstance().isFinishedReading(currentTime - this.liDarWorkerTracker.getFREQUENCY())){
+                    this.liDarWorkerTracker.setStatus(STATUS.DOWN);
+                    terminate();
+                }
+                else if (LiDarDataBase.getInstance().isErrorInTime(currentTime - this.liDarWorkerTracker.getFREQUENCY())){
+                    this.liDarWorkerTracker.setStatus(STATUS.ERROR);
+                    sendBroadcast(new CrashedBroadcast("Sensor LidarWorker disconnected"));
+                    terminate();
+                }
+                else {
+                    if (!this.liDarWorkerTracker.getLastTrackedObject().isEmpty()) {
+                        ConcurrentLinkedQueue<TrackedObject> trackedObjectsToSend = new ConcurrentLinkedQueue<>();
+                        for (TrackedObject objectInTime : this.liDarWorkerTracker.getLastTrackedObject()) {
+                            if (objectInTime.getTime() + this.liDarWorkerTracker.getFREQUENCY() == currentTime) {
+                                trackedObjectsToSend.add(objectInTime);
+                                this.liDarWorkerTracker.getLastTrackedObject().remove(objectInTime);
+                            }
+                        }
+                        if (!trackedObjectsToSend.isEmpty()) {
+                            this.sendEvent(new TrackedObjectsEvent(trackedObjectsToSend));
+                            StatisticalFolder.getInstance().addTrackedObjects(trackedObjectsToSend.size());
                         }
                     }
-                    if(!trackedObjectsToSend.isEmpty()) {
-                        this.sendEvent(new TrackedObjectsEvent(trackedObjectsToSend));
-                    }
+                    //takes the list of tracked objects and send tracked broadcast
                 }
-                //takes the list of tracked objects and send tracked broadcast
-
             }
             else {
                 terminate();
-                sendBroadcast(new CrashedBroadcast("LidarWorker " + liDarWorkerTracker.getId() + "got crashed"));
             }
         });
         this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{

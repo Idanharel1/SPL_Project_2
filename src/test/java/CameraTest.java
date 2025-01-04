@@ -1,7 +1,8 @@
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 public class CameraTest {
-//    @Test
+//at least 2 tests from a function that gives the service new data from the app
+    //    @Test
     //example from chatgpt
     /*
     void additionShouldReturnCorrectSum() {

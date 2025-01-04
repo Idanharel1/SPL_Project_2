@@ -1,15 +1,17 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Holds statistical information about the system's operation.
  * This class aggregates metrics such as the runtime of the system,
  * the number of objects detected and tracked, and the number of landmarks identified.
  */
 public class StatisticalFolder {
-    private int systemRuntime;
-    private int numDetectedObjects;
-    private int numTrackedObjects;
-    private int numLandmarks;
+    private AtomicInteger systemRuntime;
+    private AtomicInteger numDetectedObjects;
+    private AtomicInteger numTrackedObjects;
+    private AtomicInteger numLandmarks;
 
     private static class SingletonHolder{
         private static final StatisticalFolder instance = new StatisticalFolder();
@@ -18,42 +20,33 @@ public class StatisticalFolder {
         return StatisticalFolder.SingletonHolder.instance;
     }
 
-//    public StatisticalFolder(int systemRuntime, int numDetectedObjects, int numTrackedObjects, int numLandmarks) {
-//        this.systemRuntime = systemRuntime;
-//        this.numDetectedObjects = numDetectedObjects;
-//        this.numTrackedObjects = numTrackedObjects;
-//        this.numLandmarks = numLandmarks;
-//    }
-
-    public int getSystemRuntime() {
+    public AtomicInteger getSystemRuntime() {
         return systemRuntime;
     }
 
-    public void setSystemRuntime(int systemRuntime) {
+    public void setSystemRuntime(AtomicInteger systemRuntime) {
         this.systemRuntime = systemRuntime;
     }
 
-    public int getNumDetectedObjects() {
+    public AtomicInteger getNumDetectedObjects() {
         return numDetectedObjects;
     }
 
-    public void setNumDetectedObjects(int numDetectedObjects) {
-        this.numDetectedObjects = numDetectedObjects;
-    }
+    public void addDetectedObjects(int addition) { this.numDetectedObjects.addAndGet(addition); }
 
-    public int getNumTrackedObjects() {
+    public AtomicInteger getNumTrackedObjects() {
         return numTrackedObjects;
     }
 
-    public void setNumTrackedObjects(int numTrackedObjects) {
-        this.numTrackedObjects = numTrackedObjects;
+    public void addTrackedObjects(int addition) {
+        this.numTrackedObjects.addAndGet(addition);
     }
 
-    public int getNumLandmarks() {
+    public AtomicInteger getNumLandmarks() {
         return numLandmarks;
     }
 
-    public void setNumLandmarks(int numLandmarks) {
-        this.numLandmarks = numLandmarks;
+    public void compareAndSetNumLandmarks(int oldVal, int newVal) {
+        this.numLandmarks.compareAndSet(oldVal, newVal);
     }
 }

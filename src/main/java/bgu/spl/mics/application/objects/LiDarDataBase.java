@@ -60,8 +60,25 @@ public class LiDarDataBase {
      * @return The singleton instance of LiDarDataBase.
      */
 
-
-    public static LiDarDataBase getInstance(String filePath) {
+    public boolean isFinishedReading (int currentTimeMinusFrequency){
+        boolean isFInishedReading = true;
+        for (StampedCloudPoints stampedCloudPoint : this.getCloudPoints() ){
+            if (stampedCloudPoint.getTime() >= currentTimeMinusFrequency){
+                isFInishedReading = false;
+            }
+        }
+        return isFInishedReading;
+    }
+    public boolean isErrorInTime (int currentTimeMinusFrequency) {
+        boolean isErrorInTime = false;
+        for (StampedCloudPoints stampedCloudPoint : this.getCloudPoints() ){
+            if ((stampedCloudPoint.getTime() == currentTimeMinusFrequency) && (stampedCloudPoint.getId() == "ERROR")){
+                isErrorInTime = true;
+            }
+        }
+        return isErrorInTime;
+    }
+        public static LiDarDataBase getInstance(String filePath) {
         LiDarDataBase instance = getInstance();
         if (instance.initialized) {
             throw new IllegalStateException("LiDarDataBase has already been initialized.");

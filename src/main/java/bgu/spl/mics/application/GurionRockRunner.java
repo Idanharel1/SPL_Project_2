@@ -22,5 +22,6 @@ public class GurionRockRunner {
         // TODO: Parse configuration file.
         // TODO: Initialize system components and services.
         // TODO: Start the simulation.
+
     }
 }

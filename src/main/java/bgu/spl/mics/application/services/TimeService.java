@@ -2,6 +2,9 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.objects.StatisticalFolder;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * TimeService acts as the global timer for the system, broadcasting TickBroadcast messages
@@ -37,6 +40,7 @@ public class TimeService extends MicroService {
         for (int i = 0; i < this.DURATION; i++) {
             this.tickCounter++;
             this.sendBroadcast(new TickBroadcast(this.getName(),this.tickCounter));
+            StatisticalFolder.getInstance().setSystemRuntime(new AtomicInteger(this.tickCounter));
             Thread.sleep(this.TICKTIME*1000);
             }
         this.terminate();

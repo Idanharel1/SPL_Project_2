@@ -74,6 +74,7 @@ public class FusionSlam {
             CloudPoint newCloudPoint = new CloudPoint(xGlobal, yGlobal);
             coordinates.add(newCloudPoint);
         }
+        int oldSize = this.landMarks.size();
         LandMark newLandmark = new LandMark(trackedObject.getId(), trackedObject.getDescription(), coordinates);
         while(landmarkIter.hasNext()){
             LandMark currentLandmark = landmarkIter.next();
@@ -92,5 +93,7 @@ public class FusionSlam {
             }
         }
             this.landMarks.add(newLandmark);
+        int newSize = this.landMarks.size();
+        StatisticalFolder.getInstance().compareAndSetNumLandmarks(oldSize , newSize);
     }
 }

@@ -34,7 +34,6 @@ private GPSIMU gps;
             }
             else {
                 terminate();
-                sendBroadcast(new CrashedBroadcast("PoseService " + this.getName() + "got crashed"));
             }
         });
         this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{

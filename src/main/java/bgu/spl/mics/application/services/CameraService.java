@@ -5,10 +5,8 @@ import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.DetectedObjectsEvent;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.objects.Camera;
-import bgu.spl.mics.application.objects.DetectedObject;
-import bgu.spl.mics.application.objects.STATUS;
-import bgu.spl.mics.application.objects.StampedDetectedObjects;
+import bgu.spl.mics.application.objects.*;
+
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -40,19 +38,31 @@ public class CameraService extends MicroService {
     protected void initialize() {
         this.subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) -> {
             if(camera.getStatus() == STATUS.UP) {
-                int currentTime = tick.getTickCounter();
-                StampedDetectedObjects stampedList = new StampedDetectedObjects(currentTime);
-                for (DetectedObject object : camera.getStampedByTime(currentTime - camera.getFREQUENCY()).getDetectedObjectsList()) {
-                    stampedList.getDetectedObjectsList().add(object);
+                if (this.camera.getDetectedObjectsList().isEmpty()){
+                   this.camera.setStatus(STATUS.DOWN);
+                   terminate();
                 }
-                if(!stampedList.getDetectedObjectsList().isEmpty()){
-                    sendEvent(new DetectedObjectsEvent(stampedList));
-                    //returns future , can be read result later
+                else {
+                    int currentTime = tick.getTickCounter();
+                    StampedDetectedObjects stampedList = new StampedDetectedObjects(currentTime);
+                    for (DetectedObject object : camera.getStampedByTime(currentTime - camera.getFREQUENCY()).getDetectedObjectsList()) {
+                        if (object.getId() == "ERROR"){
+                            this.camera.setStatus(STATUS.ERROR);
+                            sendBroadcast(new CrashedBroadcast("Camera disconnected"));
+                            terminate();
+                            break;
+                        }
+                        stampedList.getDetectedObjectsList().add(object);
+                    }
+                    if((this.camera.getStatus()!=STATUS.ERROR) && (!stampedList.getDetectedObjectsList().isEmpty())){
+                        sendEvent(new DetectedObjectsEvent(stampedList));
+                        StatisticalFolder.getInstance().addDetectedObjects(stampedList.getDetectedObjectsList().size());
+                        //returns future , can be read result later
+                    }
                 }
             }
             else {
                 terminate();
-                sendBroadcast(new CrashedBroadcast("Camera " + this.getName() + "got crashed"));
             }
         });
         this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
