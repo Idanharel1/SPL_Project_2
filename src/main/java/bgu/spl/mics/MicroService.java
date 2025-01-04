@@ -108,6 +108,10 @@ public abstract class MicroService implements Runnable {
         return future;
     }
 
+    public boolean isTerminated() {
+        return terminated;
+    }
+
     /**
      * A Micro-Service calls this method in order to send the broadcast message {@code b} using the message-bus
      * to all the services subscribed to it.

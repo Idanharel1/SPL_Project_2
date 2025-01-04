@@ -11,9 +11,9 @@ public class GPSIMU {
     private STATUS status;
     private ConcurrentLinkedQueue<Pose> PoseList;
 
-    public GPSIMU(int currentTick, STATUS status, ConcurrentLinkedQueue<Pose> poseList) {
+    public GPSIMU(int currentTick, ConcurrentLinkedQueue<Pose> poseList) {
         this.currentTick = currentTick;
-        this.status = status;
+        this.status = STATUS.UP;
         PoseList = poseList;
     }
 
