@@ -40,7 +40,6 @@ public class TimeService extends MicroService {
         for (int i = 0; i < this.DURATION; i++) {
             this.tickCounter++;
             this.sendBroadcast(new TickBroadcast(this.getName(),this.tickCounter));
-            StatisticalFolder.getInstance().setSystemRuntime(new AtomicInteger(this.tickCounter));
             Thread.sleep(this.TICKTIME*1000);
             }
         this.terminate();

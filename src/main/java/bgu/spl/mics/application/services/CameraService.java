@@ -7,6 +7,7 @@ import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.*;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -45,15 +46,20 @@ public class CameraService extends MicroService {
                 else {
                     int currentTime = tick.getTickCounter();
                     StampedDetectedObjects stampedList = new StampedDetectedObjects(currentTime);
-                    for (DetectedObject object : camera.getStampedByTime(currentTime - camera.getFrequency()).getDetectedObjectsList()) {
+                    StampedDetectedObjects currentFrames = camera.getStampedByTime(currentTime - camera.getFrequency());
+                    for (DetectedObject object : currentFrames.getDetectedObjectsList()) {
                         if (object.getId() == "ERROR"){
                             this.camera.setStatus(STATUS.ERROR);
-                            sendBroadcast(new CrashedBroadcast("Camera disconnected"));
+                            CrashedBroadcast crashedBroadcast = new CrashedBroadcast("Camera disconnected");
+                            crashedBroadcast.setFaultySensor(this.getName()+this.camera.getId());
+                            crashedBroadcast.addLastCamerasFrame(this.camera ,this.camera.getLastFrames());
+                            sendBroadcast(crashedBroadcast);
                             terminate();
                             break;
                         }
                         stampedList.getDetectedObjectsList().add(object);
                     }
+                    this.camera.setLastFrames(currentFrames);
                     if((this.camera.getStatus()!=STATUS.ERROR) && (!stampedList.getDetectedObjectsList().isEmpty())){
                         sendEvent(new DetectedObjectsEvent(stampedList));
                         StatisticalFolder.getInstance().addDetectedObjects(stampedList.getDetectedObjectsList().size());
@@ -72,6 +78,7 @@ public class CameraService extends MicroService {
         });
         this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
             if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("LidarWorker")) || (crashed.getSenderId().equals("FusionSlam"))){
+                crashed.addLastCamerasFrame(this.camera ,this.camera.getLastFrames());
                 terminate();
             }
         });

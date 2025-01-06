@@ -4,6 +4,8 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.*;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * PoseService is responsible for maintaining the robot's current pose (position and orientation)
  * and broadcasting PoseEvents at every tick.
@@ -27,6 +29,7 @@ private GPSIMU gps;
     @Override
     protected void initialize() {
         this.subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) -> {
+            StatisticalFolder.getInstance().setSystemRuntime(new AtomicInteger(tick.getTickCounter()));
             if(gps.getStatus() == STATUS.UP) {
                 int currentTime = tick.getTickCounter();
                 Pose currentPose = gps.getCurrentPose(currentTime);
@@ -43,6 +46,7 @@ private GPSIMU gps;
         });
         this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
             if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("FusionSlam"))){
+                crashed.setPoses(this.gps.posesUntilTick(this.gps.getCurrentTick()));
                 terminate();
             }
         });

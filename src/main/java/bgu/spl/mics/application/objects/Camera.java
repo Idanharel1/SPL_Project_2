@@ -13,6 +13,7 @@ private int id;
 private final int frequency;
 private ConcurrentLinkedQueue<StampedDetectedObjects> detectedObjectsList;
 private STATUS status;
+private StampedDetectedObjects lastFrames;
 
     public Camera(int id, int frequency) {
         this.id = id;
@@ -39,6 +40,14 @@ private STATUS status;
 
     public void setDetectedObjectsList(ConcurrentLinkedQueue<StampedDetectedObjects> detectedObjectsList) {
         this.detectedObjectsList = detectedObjectsList;
+    }
+
+    public void setLastFrames(StampedDetectedObjects lastFrames) {
+        this.lastFrames = lastFrames;
+    }
+
+    public StampedDetectedObjects getLastFrames() {
+        return lastFrames;
     }
 
     public void addDetectedObjectsList(StampedDetectedObjects object) {

@@ -1,5 +1,6 @@
 package bgu.spl.mics;
 
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.LiDarDataBase;
 
 import java.util.HashMap;
@@ -30,6 +31,14 @@ public class MessageBusImpl implements MessageBus {
 		this.eventFutureHashMapHashMap = new ConcurrentHashMap<Event<?>, Future>();
 		this.microServiceQueueHashMap = new ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Message>>();
 		this.eventQueueHashMap = new ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>>();
+
+		this.broadcastQueueHashMap.put(TickBroadcast.class, new ConcurrentLinkedQueue<>());
+		this.broadcastQueueHashMap.put(TerminatedBroadcast.class, new ConcurrentLinkedQueue<>());
+		this.broadcastQueueHashMap.put(CrashedBroadcast.class, new ConcurrentLinkedQueue<>());
+		this.eventQueueHashMap.put(PoseEvent.class, new ConcurrentLinkedQueue<>());
+		this.eventQueueHashMap.put(DetectedObjectsEvent.class, new ConcurrentLinkedQueue<>());
+		this.eventQueueHashMap.put(TrackedObjectsEvent.class, new ConcurrentLinkedQueue<>());
+
 	}
 
 	private static class SingletonHolder{
@@ -41,34 +50,36 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		synchronized(this.eventQueueHashMap) {
+//		synchronized(this.eventQueueHashMap) {
 			this.eventQueueHashMap.get(type).add(m);
-		}
+//		}
 	}
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		synchronized(this.broadcastQueueHashMap){
+//		synchronized(this.broadcastQueueHashMap){
 			this.broadcastQueueHashMap.get(type).add(m);
-		}
+//		}
 	}
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-		synchronized(this.eventFutureHashMapHashMap){
+//		synchronized(this.eventFutureHashMapHashMap){
+			//Might need to check if future is null before resolving it
 			this.eventFutureHashMapHashMap.get(e).resolve(result);
-		}
+//		}
 	}
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
-		synchronized (this.broadcastQueueHashMap){
-			for (MicroService m : broadcastQueueHashMap.get(b.getClass())){
-				microServiceQueueHashMap.get(m).add(b);
-				microServiceQueueHashMap.get(m).notifyAll();
-			}
-//			this.broadcastQueueHashMap.notifyAll();
+//		synchronized (this.broadcastQueueHashMap){
+		for (MicroService m : broadcastQueueHashMap.get(b.getClass())){
+			microServiceQueueHashMap.get(m).add(b);
+			microServiceQueueHashMap.get(m).notifyAll();
+			// we know that each iteraion wakes up all threads but it is better when microservice is treating each message independetly
 		}
+//			this.broadcastQueueHashMap.notifyAll();
+//		}
 	}
 
 	
@@ -83,17 +94,15 @@ public class MessageBusImpl implements MessageBus {
 			}
 		}
 		if(current!=null) {
-			synchronized (microServiceQueueHashMap.get(current)) {
-				this.microServiceQueueHashMap.get(current).add(e);
+//			synchronized (microServiceQueueHashMap.get(current)) {
 				future = new Future<T>();
-				synchronized(this.eventFutureHashMapHashMap) {
+//				synchronized(this.eventFutureHashMapHashMap) {
 					this.eventFutureHashMapHashMap.put(e, future);
-				}
+//				}
+
+				this.microServiceQueueHashMap.get(current).add(e);
 				this.microServiceQueueHashMap.get(current).notifyAll();
-			}
-			synchronized(this.eventQueueHashMap) {
-				this.eventQueueHashMap.get(e.getClass()).add(current);
-			}
+//			}
 		}
 		return future;
 	}
@@ -101,28 +110,28 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		//creates its queue in microServiceQueueHashMap
-		synchronized(this.microServiceQueueHashMap) {
-			microServiceQueueHashMap.put(m, new ConcurrentLinkedQueue<Message>());
-		}
+//		synchronized(this.microServiceQueueHashMap) {
+			microServiceQueueHashMap.put(m, new ConcurrentLinkedQueue<>());
+//		}
 	}
 
 	@Override
 	public void unregister(MicroService m) {
-		synchronized(this.microServiceQueueHashMap) {
+//		synchronized(this.microServiceQueueHashMap) {
 			//removes its queue from microServiceQueueHashMap
 			microServiceQueueHashMap.remove(m);
-		}
-		synchronized(this.eventQueueHashMap) {
+//		}
+//		synchronized(this.eventQueueHashMap) {
 			//removes each appearance in all event / broadcast queues in eventQueueHashMap , broadcastQueueHashMap
 			for (Class<? extends Event> eventType : this.eventQueueHashMap.keySet()) {
 				eventQueueHashMap.get(eventType).remove(m);
 			}
-		}
-		synchronized(this.broadcastQueueHashMap) {
+//		}
+//		synchronized(this.broadcastQueueHashMap) {
 			for (Class<? extends Broadcast> broadcastType : this.broadcastQueueHashMap.keySet()) {
 				broadcastQueueHashMap.get(broadcastType).remove(m);
 			}
-		}
+//		}
 	}
 
 	@Override
@@ -132,12 +141,12 @@ public class MessageBusImpl implements MessageBus {
 		if(microServiceQueueHashMap.get(m) == null){
 			throw new IllegalStateException("This microservice isn't registered");
 		}
-		synchronized (microServiceQueueHashMap.get(m)) {
+//		synchronized (microServiceQueueHashMap.get(m)) {
 			while (microServiceQueueHashMap.get(m).isEmpty()) {
 				microServiceQueueHashMap.get(m).wait();
 			}
 			messsage = microServiceQueueHashMap.get(m).remove();
-		}
+//		}
 		return messsage;
 	}
 

@@ -40,7 +40,15 @@ public class GPSIMU {
     public void setPoseList(ConcurrentLinkedQueue<Pose> poseList) {
         PoseList = poseList;
     }
-
+    public ConcurrentLinkedQueue<Pose> posesUntilTick (int tick){
+        ConcurrentLinkedQueue<Pose> poses = new ConcurrentLinkedQueue<>();
+        for(Pose p1 : this.PoseList){
+            if (p1.getTime() <= tick){
+                poses.add(p1);
+            }
+        }
+        return poses;
+    }
     public Pose getCurrentPose(int tick){
         Pose currentPose = null;
         for(Pose p1 : this.PoseList){

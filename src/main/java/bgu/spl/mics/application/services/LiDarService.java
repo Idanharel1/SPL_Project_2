@@ -62,7 +62,10 @@ public class LiDarService extends MicroService {
                 }
                 else if (LiDarDataBase.getInstance().isErrorInTime(currentTime - this.liDarWorkerTracker.getFrequency())){
                     this.liDarWorkerTracker.setStatus(STATUS.ERROR);
-                    sendBroadcast(new CrashedBroadcast("Sensor LidarWorker disconnected"));
+                    CrashedBroadcast crashedBroadcast = new CrashedBroadcast("Sensor LidarWorker disconnected");
+                    crashedBroadcast.setFaultySensor(this.getName()+this.liDarWorkerTracker.getId());
+                    crashedBroadcast.addLastLidarWorkersFrames(this.liDarWorkerTracker , this.liDarWorkerTracker.getLastTrackedObject());
+                    sendBroadcast(crashedBroadcast);
                     terminate();
                 }
                 else {
@@ -93,6 +96,7 @@ public class LiDarService extends MicroService {
         });
         this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
             if((crashed.getSenderId().equals("TimeService") || (crashed.getSenderId().equals("FusionSlam")))){
+                crashed.addLastLidarWorkersFrames(this.liDarWorkerTracker , this.liDarWorkerTracker.getLastTrackedObject());
                 terminate();
             }
         });
