@@ -48,6 +48,8 @@ public class MessageBusImpl implements MessageBus {
 		return MessageBusImpl.SingletonHolder.instance;
 	}
 
+	// @PRE-CONDITION: The MicroService is registered
+	// @POST-CONDITION: The MicroService is added to the event map queue.
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 //		synchronized(this.eventQueueHashMap) {
@@ -65,15 +67,16 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void complete(Event<T> e, T result) {
 //		synchronized(this.eventFutureHashMapHashMap){
-			//Might need to check if future is null before resolving it
+		if (this.eventFutureHashMapHashMap.get(e)!=null) {
 			this.eventFutureHashMapHashMap.get(e).resolve(result);
 //		}
+		}
 	}
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		for (MicroService m : broadcastQueueHashMap.get(b.getClass())){
-			synchronized (this.microServiceQueueHashMap.get(m)){
+			synchronized (microServiceQueueHashMap.get(m)){
 
 				microServiceQueueHashMap.get(m).add(b);
 				microServiceQueueHashMap.get(m).notifyAll();
@@ -108,12 +111,12 @@ public class MessageBusImpl implements MessageBus {
 		return future;
 	}
 
+	// @PRE-CONDITION: The MicroService has not been registered.
+	// @POST-CONDITION: A new queue is created for the MicroService.
 	@Override
 	public void register(MicroService m) {
 		//creates its queue in microServiceQueueHashMap
-//		synchronized(this.microServiceQueueHashMap) {
-			microServiceQueueHashMap.put(m, new ConcurrentLinkedQueue<>());
-//		}
+		microServiceQueueHashMap.put(m, new ConcurrentLinkedQueue<>());
 	}
 
 	@Override
@@ -146,8 +149,8 @@ public class MessageBusImpl implements MessageBus {
 			while (microServiceQueueHashMap.get(m).isEmpty()) {
 				microServiceQueueHashMap.get(m).wait();
 			}
-			messsage = microServiceQueueHashMap.get(m).remove();
 		}
+		messsage = microServiceQueueHashMap.get(m).remove();
 		return messsage;
 	}
 

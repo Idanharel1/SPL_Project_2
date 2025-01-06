@@ -19,9 +19,9 @@ public class LiDarService extends MicroService {
     /**
      * Constructor for LiDarService.
      *
-     * @param LiDarWorkerTracker A LiDAR Tracker worker object that this service will use to process data.
+     * @param liDarWorkerTracker A LiDAR Tracker worker object that this service will use to process data.
      */
-    public LiDarService(LiDarWorkerTracker LiDarWorkerTracker) {
+    public LiDarService(LiDarWorkerTracker liDarWorkerTracker) {
         super("LidarWorker");
         this.liDarWorkerTracker = liDarWorkerTracker;
     }

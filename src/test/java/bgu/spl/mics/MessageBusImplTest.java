@@ -43,10 +43,8 @@ public class MessageBusImplTest {
 
     @Test
     public void testSubscribeEvent() {
-// @PRE-CONDITION: The MicroService has been registered. The event class is
-// valid.
-// @POST-CONDITION: The MicroService is added to the event subscribers list.
-
+        // @PRE-CONDITION: The MicroService is registered
+        // @POST-CONDITION: The MicroService is added to the event map queue.
         messageBus.register(ms1);
         messageBus.subscribeEvent(PoseEvent.class, ms1);
         assertTrue(messageBus.getEventQueueHashMap().get(PoseEvent.class).contains(ms1),
@@ -104,16 +102,16 @@ public class MessageBusImplTest {
         Pose pose = new Pose(1, 2, 3, 3);
 
         PoseEvent event = new PoseEvent(pose);
-//        bgu.spl.mics.Future<Pose> future = (bgu.spl.mics.Future<Pose>) messageBus.sendEvent(event);
+        bgu.spl.mics.Future<String> future = (bgu.spl.mics.Future<String>) messageBus.sendEvent(event);
 
-//        assertNotNull(future, "Future should be returned for the event.");
+        assertNotNull(future, "Future should be returned for the event.");
 
 // Simulate processing the event and completing the future
-//        messageBus.complete(event, pose);
+        messageBus.complete(event, "Time: " + pose.getTime() + ",X: " + pose.getX() + ",Y: " + pose.getY() + ",Yaw: " +pose.getYaw());
 
-//        Pose result;
-//        result = future.get();
-//        assertEquals(event.getPose(), result, "The event result should match the completed event.");
+        String result;
+        result = future.get();
+        assertEquals("Time: " + event.getPose().getTime() + ",X: " + event.getPose().getX() + ",Y: " + event.getPose().getY() + ",Yaw: " +event.getPose().getYaw(), result, "The event result should match the completed event.");
 
     }
 
@@ -128,17 +126,14 @@ public class MessageBusImplTest {
         Pose pose = new Pose(7, 3, 30, 8);
 
         PoseEvent event = new PoseEvent(pose);
-//        bgu.spl.mics.Future<Pose> future = (bgu.spl.mics.Future<Pose>) messageBus.sendEvent(event);
+        bgu.spl.mics.Future<String> future = (bgu.spl.mics.Future<String>) messageBus.sendEvent(event);
 
 // Simulate processing the event and completing the future
-//        messageBus.complete(event, pose);
+        messageBus.complete(event, "Time: " + pose.getTime() + ",X: " + pose.getX() + ",Y: " + pose.getY() + ",Yaw: " +pose.getYaw());
 
-        Pose result;
-//        result = future.get();
-//        assertEquals(event.getPose(), result, "The event result should match the completed event.");
-
-// * 2. The event is removed from the map of events and futures.
-//        assertFalse(messageBus.getEventFutureHashMapHashMap().containsKey(event), "The event should be removed from the map.");
+        String result;
+        result = future.get();
+        assertEquals("Time: " + event.getPose().getTime() + ",X: " + event.getPose().getX() + ",Y: " + event.getPose().getY() + ",Yaw: " +event.getPose().getYaw(), result, "The event result should match the completed event.");
 
     }
 

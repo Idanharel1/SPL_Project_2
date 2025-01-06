@@ -178,10 +178,11 @@ public abstract class MicroService implements Runnable {
                 c.call(m);
             }
         }
-        catch (InterruptedException ignored) {
+        catch (InterruptedException e) {
             messageBus.unregister(this);
             terminate();
-            Thread.currentThread().interrupt();// after the thread was interrupted the flag turns back to false, so we change it to true for other functions to call it to know it was interrupted - we don't have to do it because were not going back to check to check the loop condition
+            Thread.currentThread().interrupt();
+            e.printStackTrace();// after the thread was interrupted the flag turns back to false, so we change it to true for other functions to call it to know it was interrupted - we don't have to do it because were not going back to check to check the loop condition
             //asking to terminate program so we'll stop the thread and might return null
         }
     }

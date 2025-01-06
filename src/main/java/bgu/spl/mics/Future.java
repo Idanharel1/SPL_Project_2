@@ -65,8 +65,8 @@ public class Future<T> {
      * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
      *         elapsed, return null.
      */
-	public synchronized T get(long timeout, TimeUnit unit) {
-		long millis = unit.toMillis(timeout);
+	public synchronized T get(long timout, TimeUnit unit) {
+		long millis = unit.toMillis(timout);
 		try {
 			if (!isDone()) {
 				Thread.sleep(millis);

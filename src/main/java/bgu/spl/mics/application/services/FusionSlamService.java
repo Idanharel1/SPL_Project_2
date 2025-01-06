@@ -32,9 +32,11 @@ public class FusionSlamService extends MicroService {
     protected void initialize() {
         this.subscribeEvent(TrackedObjectsEvent.class , (TrackedObjectsEvent trackedObjectEvent) -> {
             this.fusionSlam.addTrackedObject(trackedObjectEvent.getTrackedObjectsList());
+            this.complete(trackedObjectEvent, "Fusion Slam Got " + trackedObjectEvent.getTrackedObjectsList().size() + " Tracked Objects");
         });
         this.subscribeEvent(PoseEvent.class , (PoseEvent poseEvent) -> {
             this.fusionSlam.addPose(poseEvent.getPose());
+            this.complete(poseEvent,"Time: " + poseEvent.getPose().getTime() + ",X: " + poseEvent.getPose().getX() + ",Y: " + poseEvent.getPose().getY() + ",Yaw: " +poseEvent.getPose().getYaw());
         });
         this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
             if(terminate.getSenderId().equals("TimeService")){

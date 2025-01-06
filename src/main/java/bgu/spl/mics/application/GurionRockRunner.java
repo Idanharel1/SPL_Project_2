@@ -331,8 +331,8 @@ public class GurionRockRunner {
 
         //create output file
         Path outputfileParentPath = Paths.get(CONFIGURATIONFILE).getParent();
-            createOutputFileWithErrors(outputfileParentPath , ErrorObject.getInstance());
-/*
+//            createOutputFileWithErrors(outputfileParentPath , ErrorObject.getInstance());
+
             if (!ErrorObject.getInstance().isCrashed()){
             createOutputFile(outputfileParentPath);
         }
@@ -341,6 +341,6 @@ public class GurionRockRunner {
            createOutputFileWithErrors(outputfileParentPath , ErrorObject.getInstance());
         }
         //if error create output file with errors
-*/
+
     }
 }

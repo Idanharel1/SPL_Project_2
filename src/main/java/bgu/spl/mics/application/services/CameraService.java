@@ -47,23 +47,26 @@ public class CameraService extends MicroService {
                     int currentTime = tick.getTickCounter();
                     StampedDetectedObjects stampedList = new StampedDetectedObjects(currentTime);
                     StampedDetectedObjects currentFrames = camera.getStampedByTime(currentTime - camera.getFrequency());
-                    for (DetectedObject object : currentFrames.getDetectedObjectsList()) {
-                        if (object.getId() == "ERROR"){
-                            this.camera.setStatus(STATUS.ERROR);
-                            CrashedBroadcast crashedBroadcast = new CrashedBroadcast("Camera disconnected");
-                            crashedBroadcast.setFaultySensor(this.getName()+this.camera.getId());
-                            crashedBroadcast.addLastCamerasFrame(this.camera ,this.camera.getLastFrames());
-                            sendBroadcast(crashedBroadcast);
-                            terminate();
-                            break;
+                    if (currentFrames!=null){
+                        for (DetectedObject object : currentFrames.getDetectedObjectsList()) {
+                            if (object.getId() == "ERROR"){
+                                this.camera.setStatus(STATUS.ERROR);
+                                CrashedBroadcast crashedBroadcast = new CrashedBroadcast("Camera disconnected");
+                                crashedBroadcast.setFaultySensor(this.getName()+this.camera.getId());
+                                crashedBroadcast.addLastCamerasFrame(this.camera ,this.camera.getLastFrames());
+                                sendBroadcast(crashedBroadcast);
+                                terminate();
+                                break;
+                            }
+                            stampedList.getDetectedObjectsList().add(object);
                         }
-                        stampedList.getDetectedObjectsList().add(object);
-                    }
-                    this.camera.setLastFrames(currentFrames);
-                    if((this.camera.getStatus()!=STATUS.ERROR) && (!stampedList.getDetectedObjectsList().isEmpty())){
-                        sendEvent(new DetectedObjectsEvent(stampedList));
-                        StatisticalFolder.getInstance().addDetectedObjects(stampedList.getDetectedObjectsList().size());
-                        //returns future , can be read result later
+                        this.camera.setLastFrames(currentFrames);
+                        if((this.camera.getStatus()!=STATUS.ERROR) && (!stampedList.getDetectedObjectsList().isEmpty())){
+                            sendEvent(new DetectedObjectsEvent(stampedList));
+                            StatisticalFolder.getInstance().addDetectedObjects(stampedList.getDetectedObjectsList().size());
+                            //returns future , can be read result later
+                        }
+
                     }
                 }
             }

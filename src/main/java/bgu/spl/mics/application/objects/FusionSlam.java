@@ -47,7 +47,6 @@ public class FusionSlam {
                 this.trackedObjects.remove(trackedObject);
             }
         }
-//        this.notifyAll();
     }
     public void addTrackedObject (ConcurrentLinkedQueue<TrackedObject> newTrackedObjects){
         boolean foundPose = false;
@@ -62,7 +61,6 @@ public class FusionSlam {
                 this.trackedObjects.add(trackedObject);
             }
         }
-//        this.notifyAll();
     }
     private void addAsLandmark (TrackedObject trackedObject , Pose pose){
         Iterator<LandMark> landmarkIter = this.getLandMarks().iterator();
