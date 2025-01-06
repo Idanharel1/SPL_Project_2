@@ -72,14 +72,15 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
-//		synchronized (this.broadcastQueueHashMap){
 		for (MicroService m : broadcastQueueHashMap.get(b.getClass())){
-			microServiceQueueHashMap.get(m).add(b);
-			microServiceQueueHashMap.get(m).notifyAll();
+			synchronized (this.microServiceQueueHashMap.get(m)){
+
+				microServiceQueueHashMap.get(m).add(b);
+				microServiceQueueHashMap.get(m).notifyAll();
 			// we know that each iteraion wakes up all threads but it is better when microservice is treating each message independetly
-		}
+			}
 //			this.broadcastQueueHashMap.notifyAll();
-//		}
+		}
 	}
 
 	
@@ -94,7 +95,7 @@ public class MessageBusImpl implements MessageBus {
 			}
 		}
 		if(current!=null) {
-//			synchronized (microServiceQueueHashMap.get(current)) {
+			synchronized (microServiceQueueHashMap.get(current)) {
 				future = new Future<T>();
 //				synchronized(this.eventFutureHashMapHashMap) {
 					this.eventFutureHashMapHashMap.put(e, future);
@@ -102,7 +103,7 @@ public class MessageBusImpl implements MessageBus {
 
 				this.microServiceQueueHashMap.get(current).add(e);
 				this.microServiceQueueHashMap.get(current).notifyAll();
-//			}
+			}
 		}
 		return future;
 	}
@@ -141,15 +142,28 @@ public class MessageBusImpl implements MessageBus {
 		if(microServiceQueueHashMap.get(m) == null){
 			throw new IllegalStateException("This microservice isn't registered");
 		}
-//		synchronized (microServiceQueueHashMap.get(m)) {
+		synchronized (microServiceQueueHashMap.get(m)) {
 			while (microServiceQueueHashMap.get(m).isEmpty()) {
 				microServiceQueueHashMap.get(m).wait();
 			}
 			messsage = microServiceQueueHashMap.get(m).remove();
-//		}
+		}
 		return messsage;
 	}
 
-	
+	public ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>> getEventQueueHashMap() {
+		return eventQueueHashMap;
+	}
 
+	public ConcurrentHashMap<Event<?>, Future> getEventFutureHashMapHashMap() {
+		return eventFutureHashMapHashMap;
+	}
+
+	public ConcurrentHashMap<Class<? extends Broadcast>, ConcurrentLinkedQueue<MicroService>> getBroadcastQueueHashMap() {
+		return broadcastQueueHashMap;
+	}
+
+	public ConcurrentHashMap<MicroService, ConcurrentLinkedQueue<Message>> getMicroServiceQueueHashMap() {
+		return microServiceQueueHashMap;
+	}
 }

@@ -325,6 +325,7 @@ public class GurionRockRunner {
             }
             timeServiceThread.join();
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             e.printStackTrace();
         }
 

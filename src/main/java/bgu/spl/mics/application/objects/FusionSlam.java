@@ -39,7 +39,7 @@ public class FusionSlam {
         return landMarks;
     }
 
-    public synchronized void addPose (Pose pose){
+    public void addPose (Pose pose){
        this.poses.add(pose);
         for (TrackedObject trackedObject : this.trackedObjects){
             if (trackedObject.getTime() == pose.getTime()){
@@ -47,9 +47,9 @@ public class FusionSlam {
                 this.trackedObjects.remove(trackedObject);
             }
         }
-        this.notifyAll();
+//        this.notifyAll();
     }
-    public synchronized void addTrackedObject (ConcurrentLinkedQueue<TrackedObject> newTrackedObjects){
+    public void addTrackedObject (ConcurrentLinkedQueue<TrackedObject> newTrackedObjects){
         boolean foundPose = false;
         for (TrackedObject trackedObject : newTrackedObjects){
             for (Pose pose : this.poses) {
@@ -62,7 +62,7 @@ public class FusionSlam {
                 this.trackedObjects.add(trackedObject);
             }
         }
-        this.notifyAll();
+//        this.notifyAll();
     }
     private void addAsLandmark (TrackedObject trackedObject , Pose pose){
         Iterator<LandMark> landmarkIter = this.getLandMarks().iterator();
