@@ -3,6 +3,7 @@ package bgu.spl.mics;
 import bgu.spl.mics.application.messages.TerminatedBroadcast;
 
 import java.util.HashMap;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -27,6 +28,12 @@ public abstract class MicroService implements Runnable {
     private boolean terminated = false;
     private final String name;
     private HashMap<Class<?> ,Callback<?>> callbackHashMap;
+    private CountDownLatch latch; // Add this line
+
+    public void setLatch(CountDownLatch latch1) {
+        this.latch = latch1;
+    }
+
 
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
@@ -172,6 +179,11 @@ public abstract class MicroService implements Runnable {
         messageBus.register(this);
         try {
             initialize();
+            latch.countDown(); // Notify that the service is ready
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        try {
             while (!terminated) { //maybe we need to add a synchronized method to ask if thread is terminated so the terminated won't be read from the cache and might be wrong
                 Message m = messageBus.awaitMessage(this);
                 Callback c = this.callbackHashMap.get(m.getClass());

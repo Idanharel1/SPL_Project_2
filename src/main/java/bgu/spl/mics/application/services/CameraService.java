@@ -38,6 +38,7 @@ public class CameraService extends MicroService {
     @Override
     protected void initialize() {
         this.subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) -> {
+            System.out.println("Camera got tick "+ tick.getTickCounter());
             if(camera.getStatus() == STATUS.UP) {
                 if (this.camera.getDetectedObjectsList().isEmpty()){
                    this.camera.setStatus(STATUS.DOWN);
@@ -62,6 +63,7 @@ public class CameraService extends MicroService {
                         }
                         this.camera.setLastFrames(currentFrames);
                         if((this.camera.getStatus()!=STATUS.ERROR) && (!stampedList.getDetectedObjectsList().isEmpty())){
+                            System.out.println("Camera sends detected object "+stampedList.getDetectedObjectsList().peek().getId());
                             sendEvent(new DetectedObjectsEvent(stampedList));
                             StatisticalFolder.getInstance().addDetectedObjects(stampedList.getDetectedObjectsList().size());
                             //returns future , can be read result later
@@ -76,6 +78,7 @@ public class CameraService extends MicroService {
         });
         this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
             if((terminate.getSenderId().equals("TimeService")) || (terminate.getSenderId().equals("LidarWorker")) || (terminate.getSenderId().equals("FusionSlam"))){
+                System.out.println("Camera got terminated from "+ terminate.getSenderId());
                 terminate();
             }
         });

@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -40,7 +41,7 @@ public class FusionSlam {
     }
 
     public void addPose (Pose pose){
-       this.poses.add(pose);
+        this.poses.add(pose);
         for (TrackedObject trackedObject : this.trackedObjects){
             if (trackedObject.getTime() == pose.getTime()){
                 addAsLandmark(trackedObject , pose);

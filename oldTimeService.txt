@@ -37,16 +37,8 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
-        // Guaranteed delay before the first tick broadcast
-        try {
-            Thread.sleep(3000);  // Sleep for 1 second (adjust as needed)
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            System.err.println("TimeService interrupted during startup delay");
-        }
         for (int i = 0; i < this.DURATION; i++) {
             this.tickCounter++;
-            System.out.println("Time service sent tick " + this.tickCounter);
             this.sendBroadcast(new TickBroadcast(this.getName(),this.tickCounter));
             try {
                 Thread.sleep(this.TICKTIME* 1000L);

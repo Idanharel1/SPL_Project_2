@@ -59,7 +59,7 @@ public class MessageBusImpl implements MessageBus {
 	// @POST-CONDITION: The MicroService is added to the broadcast map queue.
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-		this.broadcastQueueHashMap.get(type).add(m);
+		this.broadcastQueueHashMap.computeIfAbsent(type, k -> new ConcurrentLinkedQueue<>()).add(m);
 	}
 
 	// @PRE-CONDITION: The event is successfully processed and not completed yet.

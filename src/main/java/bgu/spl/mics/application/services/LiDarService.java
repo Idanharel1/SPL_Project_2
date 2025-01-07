@@ -34,6 +34,7 @@ public class LiDarService extends MicroService {
     @Override
     protected void initialize() {
         this.subscribeEvent(DetectedObjectsEvent.class, (DetectedObjectsEvent detectedObjectEvent) ->{
+            System.out.println("Lidar got detectedObject "+ detectedObjectEvent.getStampedDetectedObjects().getDetectedObjectsList().peek().getId());
             if(this.liDarWorkerTracker.getStatus() == STATUS.UP) {
                 int currentTime = detectedObjectEvent.getStampedDetectedObjects().getTime();
                 String result = "Lidar handled event of objects ";
@@ -54,6 +55,7 @@ public class LiDarService extends MicroService {
             }
         });
         this.subscribeBroadcast(TickBroadcast.class , (TickBroadcast tickBroadcast)->{
+            System.out.println("Lidar got tick "+ tickBroadcast.getTickCounter());
             if(liDarWorkerTracker.getStatus() == STATUS.UP) {
                 int currentTime = tickBroadcast.getTickCounter();
                 if (LiDarDataBase.getInstance().isFinishedReading(currentTime - this.liDarWorkerTracker.getFrequency())){
@@ -78,6 +80,7 @@ public class LiDarService extends MicroService {
                             }
                         }
                         if (!trackedObjectsToSend.isEmpty()) {
+                            System.out.println("Lidar sends tracked object "+ trackedObjectsToSend.peek().getId());
                             this.sendEvent(new TrackedObjectsEvent(trackedObjectsToSend));
                             StatisticalFolder.getInstance().addTrackedObjects(trackedObjectsToSend.size());
                         }
@@ -91,6 +94,7 @@ public class LiDarService extends MicroService {
         });
         this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
             if((terminate.getSenderId().equals("TimeService") || (terminate.getSenderId().equals("FusionSlam")))){
+                System.out.println("Lidar got terminated from "+ terminate.getSenderId());
                 terminate();
             }
         });

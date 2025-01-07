@@ -1,5 +1,7 @@
 package bgu.spl.mics.application;
 
+import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.Gson;
@@ -14,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * The main entry point for the GurionRock Pro Max Ultra Over 9000 simulation.
@@ -80,7 +83,6 @@ public class GurionRockRunner {
         try (FileReader reader = new FileReader(filePath)) {
             JsonObject jsonObject = gson.fromJson(reader , JsonObject.class);
             timeService = new TimeService(jsonObject.get("TickTime").getAsInt() ,jsonObject.get("Duration").getAsInt() );
-            timeService.run();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -178,7 +180,6 @@ public class GurionRockRunner {
         Path outputJsonPath = parentPath.resolve("error_simulation_output.json");
         StatisticalFolder instance = StatisticalFolder.getInstance();
         // Prepare data for the JSON file (for example, statistics)
-
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("systemRuntime", instance.getSystemRuntime().intValue());
         statistics.put("numDetectedObjects", instance.getNumDetectedObjects().intValue());
@@ -205,64 +206,66 @@ public class GurionRockRunner {
             landMarksMap.put(landMark.getId(), landmarkDetails);
         }
         statistics.put("landmarks", landMarksMap);
-
         Map<String, Object> output = new HashMap<>();
-        output.put("error",error.getCrashedBroadcast().getSenderId());
-        output.put("faultySensor", error.getCrashedBroadcast().getFaultySensor());
-        Map<String, Object> cameraMap = new HashMap<>();
-        for (Camera camera : error.getCrashedBroadcast().getLastCamerasFrame().keySet()){
-            StampedDetectedObjects stamped = error.getCrashedBroadcast().getLastCamerasFrame().get(camera);
-            Map<String,Object> timeMap = new HashMap<>();
-            int time = stamped.getTime();
-            timeMap.put("time", time);
-            List<Map<String, Object>> detectedObjectsArray = new ArrayList<>();
-            for (DetectedObject object : stamped.getDetectedObjectsList() ){
-                Map<String, Object> detectedObject = new HashMap<>();
-                detectedObject.put("id",object.getId());
-                detectedObject.put("description", object.getDescription());
-                detectedObjectsArray.add(detectedObject);
-            }
-            timeMap.put("detectedObjects",detectedObjectsArray);
-            cameraMap.put("Camera" + camera.getId(),timeMap);
-        }
-        output.put("lastCamerasFrame",cameraMap);
-        Map<String,Object> lidarsMap = new HashMap<>();
-        for (LiDarWorkerTracker lidar : error.getCrashedBroadcast().getLastLidarWorkersFrames().keySet()){
-            ConcurrentLinkedQueue<TrackedObject> trackedObjects = error.getCrashedBroadcast().getLastLidarWorkersFrames().get(lidar);
-            Iterator<TrackedObject> trackedObjectIter = trackedObjects.iterator();
-            List<Map<String,Object>> trackersArray = new ArrayList<>();
-            while(trackedObjectIter.hasNext()){
-                TrackedObject current = trackedObjectIter.next();
-                Map<String,Object> objectMap = new HashMap<>();
-                objectMap.put("id",current.getId());
-                objectMap.put("time",current.getTime());
-                objectMap.put("description",current.getDescription());
-                List<Map<String,Object>> coordinatesArray = new ArrayList<>();
-                for (int i = 0; i < current.getCoordinates().length; i++) {
-                    Map<String,Object> axes = new HashMap<>();
-                    axes.put("x",current.getCoordinates()[i].getX());
-                    axes.put("y",current.getCoordinates()[i].getX());
-                    coordinatesArray.add(axes);
+        CrashedBroadcast crashedBroadcast = error.getCrashedBroadcast();
+        if(crashedBroadcast!=null) {
+            output.put("error", crashedBroadcast.getSenderId());
+            output.put("faultySensor", crashedBroadcast.getFaultySensor());
+            Map<String, Object> cameraMap = new HashMap<>();
+            for (Camera camera : crashedBroadcast.getLastCamerasFrame().keySet()) {
+                StampedDetectedObjects stamped = crashedBroadcast.getLastCamerasFrame().get(camera);
+                Map<String, Object> timeMap = new HashMap<>();
+                int time = stamped.getTime();
+                timeMap.put("time", time);
+                List<Map<String, Object>> detectedObjectsArray = new ArrayList<>();
+                for (DetectedObject object : stamped.getDetectedObjectsList()) {
+                    Map<String, Object> detectedObject = new HashMap<>();
+                    detectedObject.put("id", object.getId());
+                    detectedObject.put("description", object.getDescription());
+                    detectedObjectsArray.add(detectedObject);
                 }
-                objectMap.put("coordinates",coordinatesArray);
-                trackersArray.add(objectMap);
+                timeMap.put("detectedObjects", detectedObjectsArray);
+                cameraMap.put("Camera" + camera.getId(), timeMap);
             }
-            lidarsMap.put("LiDarWorkerTracker" + lidar.getId(), trackersArray);
-        }
-        output.put("lastLiDarWorkerTrackersFrame",lidarsMap);
+            output.put("lastCamerasFrame", cameraMap);
+            Map<String, Object> lidarsMap = new HashMap<>();
+            for (LiDarWorkerTracker lidar : crashedBroadcast.getLastLidarWorkersFrames().keySet()) {
+                ConcurrentLinkedQueue<TrackedObject> trackedObjects = crashedBroadcast.getLastLidarWorkersFrames().get(lidar);
+                Iterator<TrackedObject> trackedObjectIter = trackedObjects.iterator();
+                List<Map<String, Object>> trackersArray = new ArrayList<>();
+                while (trackedObjectIter.hasNext()) {
+                    TrackedObject current = trackedObjectIter.next();
+                    Map<String, Object> objectMap = new HashMap<>();
+                    objectMap.put("id", current.getId());
+                    objectMap.put("time", current.getTime());
+                    objectMap.put("description", current.getDescription());
+                    List<Map<String, Object>> coordinatesArray = new ArrayList<>();
+                    for (int i = 0; i < current.getCoordinates().length; i++) {
+                        Map<String, Object> axes = new HashMap<>();
+                        axes.put("x", current.getCoordinates()[i].getX());
+                        axes.put("y", current.getCoordinates()[i].getX());
+                        coordinatesArray.add(axes);
+                    }
+                    objectMap.put("coordinates", coordinatesArray);
+                    trackersArray.add(objectMap);
+                }
+                lidarsMap.put("LiDarWorkerTracker" + lidar.getId(), trackersArray);
+            }
+            output.put("lastLiDarWorkerTrackersFrame", lidarsMap);
 
-        List<Map<String,Object>> posesArray = new ArrayList<>();
-        Iterator<Pose> poseIterator = error.getCrashedBroadcast().getPoses().iterator();
-        while(poseIterator.hasNext()){
-            Pose current = poseIterator.next();
-            Map<String,Object> poseMap = new HashMap<>();
-            poseMap.put("time",current.getTime());
-            poseMap.put("x",current.getX());
-            poseMap.put("y",current.getY());
-            poseMap.put("yaw",current.getYaw());
-            posesArray.add(poseMap);
+            List<Map<String, Object>> posesArray = new ArrayList<>();
+            Iterator<Pose> poseIterator = crashedBroadcast.getPoses().iterator();
+            while (poseIterator.hasNext()) {
+                Pose current = poseIterator.next();
+                Map<String, Object> poseMap = new HashMap<>();
+                poseMap.put("time", current.getTime());
+                poseMap.put("x", current.getX());
+                poseMap.put("y", current.getY());
+                poseMap.put("yaw", current.getYaw());
+                posesArray.add(poseMap);
+            }
+            output.put("poses", posesArray);
         }
-        output.put("poses",posesArray);
         output.put("statistics",statistics);
         // Convert the statistics to JSON using Gson
         Gson gson = new Gson();
@@ -280,7 +283,7 @@ public class GurionRockRunner {
         public static void main(String[] args) {
         System.out.println("Hello World!");
         final String CONFIGURATIONFILE = args[0];
-        List<Thread> threadList = new ArrayList<>();
+        List<MicroService> servicesList = new ArrayList<>();
 
         //parse lidar JSON
         LiDarDataBase.getInstance(CONFIGURATIONFILE);
@@ -290,47 +293,77 @@ public class GurionRockRunner {
         List<Camera> camerasList = parseCamers(CONFIGURATIONFILE);
         for (Camera camera : camerasList){
             CameraService cameraService = new CameraService(camera);
-            threadList.add(new Thread(cameraService , cameraService.getName() + " " + camera.getId()));
+            servicesList.add(cameraService);
         }
 
         //parseLidar JSON
         List<LiDarWorkerTracker> lidarsList =parseLidar(CONFIGURATIONFILE);
         for (LiDarWorkerTracker lidar : lidarsList){
             LiDarService lidarService = new LiDarService(lidar);
-            threadList.add(new Thread(lidarService , lidarService.getName() + " " + lidar.getId()));
+            servicesList.add(lidarService);
         }
         //parse GPSIMU JSON
         GPSIMU gps = parseGPSIMU(CONFIGURATIONFILE);
         PoseService poseService = new PoseService(gps);
-        threadList.add(new Thread(poseService , poseService.getName()));
+        servicesList.add(poseService);
 
         //FusionSlam service
         FusionSlamService fusionSlamService = new FusionSlamService(FusionSlam.getInstance());
-        threadList.add(new Thread(fusionSlamService, fusionSlamService.getName()));
+        servicesList.add(fusionSlamService);
 
-        //parse Ticktime and Duration to create Timeservice and run time service
-        TimeService timeService = parseTimeService(CONFIGURATIONFILE);
-        Thread timeServiceThread = new Thread(timeService, timeService.getName());
-        for (Thread thread : threadList){
-            thread.start();
+        CountDownLatch latch = new CountDownLatch(servicesList.size());
+        List<Thread> threadList = new ArrayList<>();
+        for (MicroService service : servicesList){
+            Thread t = new Thread(() -> {
+                service.setLatch(latch);  // Notify when ready
+                service.run();
+            });
+            t.start();
+            threadList.add(t);
         }
-        timeServiceThread.start();
+            //parse Ticktime and Duration to create Timeservice and run time service
+        TimeService timeService = parseTimeService(CONFIGURATIONFILE);
+        timeService.setLatch(latch);  // Ensure the latch is also set for TimeService
+        Thread timeThread = new Thread(() -> {
+            try {
+                latch.await();  // Wait for all services to be ready
+                timeService.run();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+        if (timeThread == null) {
+            throw new IllegalStateException("TimeServiceThread is not initialized");
+        }
+        timeThread.start();
 
-        //code to wait until all threads are done for the output file
+
+    //code to wait until all threads are done for the output file
         try {
             for (Thread thread : threadList) {
-                thread.join();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // Restore interrupted status
+                    System.err.println("Thread interrupted while waiting for threadList: " + e);
+                }
             }
-            timeServiceThread.join();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+
+            try {
+                timeThread.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // Restore interrupted status
+                System.err.println("Thread interrupted while waiting for timeServiceThread: " + e);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Unexpected error in main: " + e);
             e.printStackTrace();
         }
 
-        //create output file
-        Path outputfileParentPath = Paths.get(CONFIGURATIONFILE).getParent();
-//            createOutputFileWithErrors(outputfileParentPath , ErrorObject.getInstance());
 
+            //create output file
+        Path outputfileParentPath = Paths.get(CONFIGURATIONFILE).getParent();
             if (!ErrorObject.getInstance().isCrashed()){
             createOutputFile(outputfileParentPath);
         }
@@ -338,7 +371,5 @@ public class GurionRockRunner {
             System.out.println("Error");
            createOutputFileWithErrors(outputfileParentPath , ErrorObject.getInstance());
         }
-        //if error create output file with errors
-
     }
 }

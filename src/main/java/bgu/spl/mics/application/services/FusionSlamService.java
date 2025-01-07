@@ -4,6 +4,8 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.*;
 
+import java.util.Objects;
+
 /**
  * FusionSlamService integrates data from multiple sensors to build and update
  * the robot's global map.
@@ -31,15 +33,20 @@ public class FusionSlamService extends MicroService {
     @Override
     protected void initialize() {
         this.subscribeEvent(TrackedObjectsEvent.class , (TrackedObjectsEvent trackedObjectEvent) -> {
+            System.out.println("Fusionslam got TrackedObject "+ trackedObjectEvent.getTrackedObjectsList().peek().getId());
             this.fusionSlam.addTrackedObject(trackedObjectEvent.getTrackedObjectsList());
             this.complete(trackedObjectEvent, "Fusion Slam Got " + trackedObjectEvent.getTrackedObjectsList().size() + " Tracked Objects");
         });
         this.subscribeEvent(PoseEvent.class , (PoseEvent poseEvent) -> {
-            this.fusionSlam.addPose(poseEvent.getPose());
-            this.complete(poseEvent,"Time: " + poseEvent.getPose().getTime() + ",X: " + poseEvent.getPose().getX() + ",Y: " + poseEvent.getPose().getY() + ",Yaw: " +poseEvent.getPose().getYaw());
+            if (poseEvent.getPose() != null) {
+                System.out.println("Fusionslam got Pose at time "+ poseEvent.getPose().getTime() + " sec");
+                this.fusionSlam.addPose(poseEvent.getPose());
+                this.complete(poseEvent,"Time: " + poseEvent.getPose().getTime() + ",X: " + poseEvent.getPose().getX() + ",Y: " + poseEvent.getPose().getY() + ",Yaw: " +poseEvent.getPose().getYaw());
+            }
         });
         this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
             if(terminate.getSenderId().equals("TimeService")){
+                System.out.println("FusionSlam got terminated from "+ terminate.getSenderId());
                 terminate();
             }
         });

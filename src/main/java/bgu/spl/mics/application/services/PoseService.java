@@ -29,11 +29,15 @@ private GPSIMU gps;
     @Override
     protected void initialize() {
         this.subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) -> {
-            StatisticalFolder.getInstance().setSystemRuntime(new AtomicInteger(tick.getTickCounter()));
+            System.out.println("Poseservice got tick "+ tick.getTickCounter());
+            int currentTime = tick.getTickCounter();
+            StatisticalFolder.getInstance().setSystemRuntime(new AtomicInteger(currentTime));
+            this.gps.setCurrentTick(currentTime);
             if(gps.getStatus() == STATUS.UP) {
-                int currentTime = tick.getTickCounter();
                 Pose currentPose = gps.getCurrentPose(currentTime);
+                System.out.println("Pose service sent PoseEvent with time "+ currentTime + " sec");
                 this.sendEvent(new PoseEvent(currentPose));
+
             }
             else {
                 terminate();
@@ -41,6 +45,7 @@ private GPSIMU gps;
         });
         this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
             if((terminate.getSenderId().equals("TimeService")) || (terminate.getSenderId().equals("FusionSlam"))){
+                System.out.println("gps got terminated from "+ terminate.getSenderId());
                 terminate();
             }
         });
