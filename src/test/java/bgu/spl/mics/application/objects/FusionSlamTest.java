@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for FusionSlam transformation logic
+ * Class Invariant: FusionSlam instance maintains consistent state between operations;
  */
 
-//need to run each test seperately or to order them
 
 public class FusionSlamTest {
     private FusionSlam fusionSlam;
@@ -22,17 +22,14 @@ public class FusionSlamTest {
     private Pose pose3;
 
 
-
     @BeforeEach
     public void setUp() {
         fusionSlam = FusionSlam.getInstance();
-        // Create test data
         CloudPoint[] coordinates = new CloudPoint[]{
                 new CloudPoint(1.0, 1.0),
                 new CloudPoint(2.0, 2.0)
         };
 
-        // Second detection with slightly different coordinates
         CloudPoint[] coordinates2 = new CloudPoint[]{
                 new CloudPoint(1.2, 1.2),
                 new CloudPoint(2.2, 2.2)
@@ -46,17 +43,18 @@ public class FusionSlamTest {
         pose2 = new Pose(4.0f, 0.0f, 90.0f, 2); // 90 degree rotation
         pose3 = new Pose(4.0f, 0.0f, 90.0f, 3); // 90 degree rotation
 
+
     }
 
+    // @PRE-CONDITION: Good TrackedObject and Pose while no landmark exists for test object ID
+    // @POST-CONDITION: New landmark exists with the correct coordinates
     @Test
     public void testTransformTrackedObjectToLandmark() {
-        // Add test pose and tracked object
         fusionSlam.addPose(pose1);
         ConcurrentLinkedQueue<TrackedObject> objects = new ConcurrentLinkedQueue<>();
         objects.add(trackedObject);
         fusionSlam.addTrackedObject(objects);
 
-        // Get the transformed landmark
         LandMark landmark = null;
         for (LandMark lm : fusionSlam.getLandMarks()) {
             if (lm.getId().equals(trackedObject.getId())) {
@@ -65,24 +63,22 @@ public class FusionSlamTest {
             }
         }
 
-        // Verify transformation
         assertNotNull(landmark, "Landmark should be created");
         assertEquals(trackedObject.getId(), landmark.getId(), "Landmark ID should match tracked object ID");
         assertEquals(trackedObject.getDescription(), landmark.getDescription(), "Description should match");
 
-        // Check coordinate transformation (90 degree rotation should swap x,y)
         CloudPoint firstPoint = landmark.getCoordinates().peek();
         assertEquals(1.0, firstPoint.getY(), 0.01, "Y coordinate should be transformed correctly");
         assertEquals(3.0, firstPoint.getX(), 0.01, "X coordinate should be transformed correctly");
     }
 
+    // @PRE-CONDITION: Two TrackedObjects exist with same ID but different coordinates
+    // @POST-CONDITION: Single landmark exists with averaged coordinates
     @Test
     public void testLandmarkAveraging() {
-        // Test that when the same object is detected multiple times, coordinates are averaged
         fusionSlam.addPose(pose2);
         fusionSlam.addPose(pose3);
 
-        // First detection
         ConcurrentLinkedQueue<TrackedObject> objects1 = new ConcurrentLinkedQueue<>();
         objects1.add(trackedObject2);
         fusionSlam.addTrackedObject(objects1);
@@ -91,7 +87,6 @@ public class FusionSlamTest {
         objects2.add(trackedObject3);
         fusionSlam.addTrackedObject(objects2);
 
-        // Verify the coordinates were averaged
         LandMark landmark = null;
         for (LandMark lm : fusionSlam.getLandMarks()) {
             if (lm.getId().equals(trackedObject2.getId())) {

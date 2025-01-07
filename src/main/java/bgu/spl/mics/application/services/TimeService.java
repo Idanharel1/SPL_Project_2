@@ -38,13 +38,6 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
-        /*
-        this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
-            if (terminate.getSenderId().equals("FusionSlam")){
-                System.out.println("TimeService got terminated from "+ terminate.getSenderId());
-                terminate();
-            }
-        });*/
         // Guaranteed delay before the first tick broadcast
         try {
             Thread.sleep(3000);  // Sleep for 1 second (adjust as needed)

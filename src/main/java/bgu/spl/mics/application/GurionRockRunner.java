@@ -4,10 +4,7 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.services.*;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -166,7 +163,7 @@ public class GurionRockRunner {
         output.put("landmarks", landMarksMap);
 
         // Convert the statistics to JSON using Gson
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String jsonString = gson.toJson(output);
 
         try {
@@ -276,7 +273,7 @@ public class GurionRockRunner {
         }
         output.put("statistics",statistics);
         // Convert the statistics to JSON using Gson
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String jsonString = gson.toJson(output);
 
         try {

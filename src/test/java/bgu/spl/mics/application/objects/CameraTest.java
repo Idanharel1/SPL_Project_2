@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for Camera data preparation and error handling
+ * Class Invariant: Camera maintains valid ID and frequency throughout all operations
  */
 public class CameraTest {
     private Camera camera;
@@ -21,7 +22,8 @@ public class CameraTest {
         stampedObjects = new StampedDetectedObjects(1);
         stampedObjects.setDetectedObjectsList(objects);
     }
-
+    // @PRE-CONDITION: Camera exists with empty detected objects list
+    // @POST-CONDITION: Test data successfully added and retrievable by timestamp
     @Test
     public void testPrepareDataForSending() {
         // Add test data to camera
@@ -39,6 +41,8 @@ public class CameraTest {
         assertEquals("Test Object", firstObject.getDescription(), "Description should match");
     }
 
+    // @PRE-CONDITION: Camera exists with UP status
+    // @POST-CONDITION: Error object successfully stored and retrievable
     @Test
     public void testErrorDetection() {
         // Create error object
@@ -59,6 +63,8 @@ public class CameraTest {
         assertEquals(STATUS.UP, camera.getStatus(), "Camera should initially be UP");
     }
 
+    // @PRE-CONDITION: Camera exists with frequency of 2
+    // @POST-CONDITION: Objects only retrievable at frequency-aligned timestamps
     @Test
     public void testFrequencyHandling() {
         // Test that camera respects its frequency setting
