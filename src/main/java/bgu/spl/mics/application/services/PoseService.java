@@ -31,13 +31,19 @@ private GPSIMU gps;
         this.subscribeBroadcast(TickBroadcast.class, (TickBroadcast tick) -> {
             System.out.println("Poseservice got tick "+ tick.getTickCounter());
             int currentTime = tick.getTickCounter();
-            StatisticalFolder.getInstance().setSystemRuntime(new AtomicInteger(currentTime));
             this.gps.setCurrentTick(currentTime);
             if(gps.getStatus() == STATUS.UP) {
                 Pose currentPose = gps.getCurrentPose(currentTime);
-                System.out.println("Pose service sent PoseEvent with time "+ currentTime + " sec");
-                this.sendEvent(new PoseEvent(currentPose));
-
+                if(currentPose!=null){
+                    System.out.println("Pose service sent PoseEvent with time "+ currentTime + " sec");
+                    StatisticalFolder.getInstance().setSystemRuntime(new AtomicInteger(currentTime));
+                    this.sendEvent(new PoseEvent(currentPose));
+                }
+                if (this.gps.isFinishedReading(currentTime)){
+                    this.gps.setStatus(STATUS.DOWN);
+                    System.out.println("Pose service got terminated");
+                    terminate();
+                }
             }
             else {
                 terminate();
@@ -50,7 +56,7 @@ private GPSIMU gps;
             }
         });
         this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
-            if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("FusionSlam"))){
+            if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("LidarWorker")) || (crashed.getSenderId().equals("Camera")) || (crashed.getSenderId().equals("FusionSlam"))){
                 crashed.setPoses(this.gps.posesUntilTick(this.gps.getCurrentTick()));
                 terminate();
             }

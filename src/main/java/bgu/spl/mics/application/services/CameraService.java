@@ -50,7 +50,8 @@ public class CameraService extends MicroService {
                     StampedDetectedObjects currentFrames = camera.getStampedByTime(currentTime - camera.getFrequency());
                     if (currentFrames!=null){
                         for (DetectedObject object : currentFrames.getDetectedObjectsList()) {
-                            if (object.getId() == "ERROR"){
+                            if (object.getId().equals("ERROR")){
+                                System.out.println("Camera recognized an ERROR at time "+currentTime);
                                 this.camera.setStatus(STATUS.ERROR);
                                 CrashedBroadcast crashedBroadcast = new CrashedBroadcast("Camera disconnected");
                                 crashedBroadcast.setFaultySensor(this.getName()+this.camera.getId());
@@ -83,7 +84,7 @@ public class CameraService extends MicroService {
             }
         });
         this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
-            if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("LidarWorker")) || (crashed.getSenderId().equals("FusionSlam"))){
+            if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("LidarWorker")) || (crashed.getSenderId().equals("PoseService")) || (crashed.getSenderId().equals("FusionSlam"))){
                 crashed.addLastCamerasFrame(this.camera ,this.camera.getLastFrames());
                 terminate();
             }

@@ -53,7 +53,7 @@ public class StatisticalFolder {
         return numLandmarks;
     }
 
-    public void compareAndSetNumLandmarks(int oldVal, int newVal) {
-        this.numLandmarks.compareAndSet(oldVal, newVal);
+    public void addNumLandmarks(int addition) {
+        this.numLandmarks.addAndGet(addition);
     }
 }

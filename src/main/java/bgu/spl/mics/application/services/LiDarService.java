@@ -40,15 +40,17 @@ public class LiDarService extends MicroService {
                 String result = "Lidar handled event of objects ";
                 //filled queue of lastTrackedObject from queue we got from detectedObjectEvent and lidarDataBase data
                 for (DetectedObject object : detectedObjectEvent.getStampedDetectedObjects().getDetectedObjectsList()) {
-                    CloudPoint[] coordinates = LiDarDataBase.getInstance().getCloudPointById(object.getId()).getCloudPoints();
-                    TrackedObject trackedObject = new TrackedObject(object.getId(), currentTime, object.getDescription(), coordinates);
-                    this.liDarWorkerTracker.getLastTrackedObject().add(trackedObject);
-                    result = result + object.getId() + " ";
+                    StampedCloudPoints cloudPoints = LiDarDataBase.getInstance().getCloudPointById(object.getId());
+                    if(cloudPoints!=null) {
+                        CloudPoint[] coordinates = cloudPoints.getCloudPoints();
+                        TrackedObject trackedObject = new TrackedObject(object.getId(), currentTime, object.getDescription(), coordinates);
+                        this.liDarWorkerTracker.getLastTrackedObject().add(trackedObject);
+                        result = result + object.getId() + " ";
+                    }
                 }
                 //sends true to camera's future
                 this.complete(detectedObjectEvent , result);
                 //suppose to send back coordinates to the lidarDataBase
-
             }
             else {
                 terminate();
@@ -58,34 +60,38 @@ public class LiDarService extends MicroService {
             System.out.println("Lidar got tick "+ tickBroadcast.getTickCounter());
             if(liDarWorkerTracker.getStatus() == STATUS.UP) {
                 int currentTime = tickBroadcast.getTickCounter();
+                if (!this.liDarWorkerTracker.getLastTrackedObject().isEmpty()) {
+                    ConcurrentLinkedQueue<TrackedObject> trackedObjectsToSend = new ConcurrentLinkedQueue<>();
+                    ConcurrentLinkedQueue<TrackedObject> pendingObjects = new ConcurrentLinkedQueue<>();
+                    for (TrackedObject objectInTime : this.liDarWorkerTracker.getLastTrackedObject()) {
+                        if (objectInTime.getTime() + this.liDarWorkerTracker.getFrequency() <= currentTime) {
+                            trackedObjectsToSend.add(objectInTime);
+                            this.liDarWorkerTracker.getLastTrackedObject().remove(objectInTime);
+                        }
+                        else {
+                            pendingObjects.add(objectInTime);
+                        }
+                    }
+                    if (!trackedObjectsToSend.isEmpty()) {
+                        System.out.println("Lidar sends tracked object "+ trackedObjectsToSend.peek().getId());
+                        StatisticalFolder.getInstance().addTrackedObjects(trackedObjectsToSend.size());
+                        this.sendEvent(new TrackedObjectsEvent(trackedObjectsToSend));
+                    }
+                    this.liDarWorkerTracker.setLastTrackedObject(pendingObjects);
+                }
+
                 if (LiDarDataBase.getInstance().isFinishedReading(currentTime - this.liDarWorkerTracker.getFrequency())){
                     this.liDarWorkerTracker.setStatus(STATUS.DOWN);
                     terminate();
                 }
                 else if (LiDarDataBase.getInstance().isErrorInTime(currentTime - this.liDarWorkerTracker.getFrequency())){
+                    System.out.println("Camera recognized an ERROR at time "+currentTime);
                     this.liDarWorkerTracker.setStatus(STATUS.ERROR);
                     CrashedBroadcast crashedBroadcast = new CrashedBroadcast("Sensor LidarWorker disconnected");
                     crashedBroadcast.setFaultySensor(this.getName()+this.liDarWorkerTracker.getId());
                     crashedBroadcast.addLastLidarWorkersFrames(this.liDarWorkerTracker , this.liDarWorkerTracker.getLastTrackedObject());
                     sendBroadcast(crashedBroadcast);
                     terminate();
-                }
-                else {
-                    if (!this.liDarWorkerTracker.getLastTrackedObject().isEmpty()) {
-                        ConcurrentLinkedQueue<TrackedObject> trackedObjectsToSend = new ConcurrentLinkedQueue<>();
-                        for (TrackedObject objectInTime : this.liDarWorkerTracker.getLastTrackedObject()) {
-                            if (objectInTime.getTime() + this.liDarWorkerTracker.getFrequency() == currentTime) {
-                                trackedObjectsToSend.add(objectInTime);
-                                this.liDarWorkerTracker.getLastTrackedObject().remove(objectInTime);
-                            }
-                        }
-                        if (!trackedObjectsToSend.isEmpty()) {
-                            System.out.println("Lidar sends tracked object "+ trackedObjectsToSend.peek().getId());
-                            this.sendEvent(new TrackedObjectsEvent(trackedObjectsToSend));
-                            StatisticalFolder.getInstance().addTrackedObjects(trackedObjectsToSend.size());
-                        }
-                    }
-                    //takes the list of tracked objects and send tracked broadcast
                 }
             }
             else {
@@ -99,7 +105,7 @@ public class LiDarService extends MicroService {
             }
         });
         this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
-            if((crashed.getSenderId().equals("TimeService") || (crashed.getSenderId().equals("FusionSlam")))){
+            if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("Camera")) || (crashed.getSenderId().equals("PoseService")) || (crashed.getSenderId().equals("FusionSlam"))){
                 crashed.addLastLidarWorkersFrames(this.liDarWorkerTracker , this.liDarWorkerTracker.getLastTrackedObject());
                 terminate();
             }

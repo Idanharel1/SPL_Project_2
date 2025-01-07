@@ -41,11 +41,15 @@ public class FusionSlam {
     }
 
     public void addPose (Pose pose){
-        this.poses.add(pose);
-        for (TrackedObject trackedObject : this.trackedObjects){
-            if (trackedObject.getTime() == pose.getTime()){
-                addAsLandmark(trackedObject , pose);
-                this.trackedObjects.remove(trackedObject);
+        if (pose!=null) {
+            this.poses.add(pose);
+            if((this.trackedObjects!=null) && (!this.trackedObjects.isEmpty())) {
+                for (TrackedObject trackedObject : this.trackedObjects) {
+                    if (trackedObject.getTime() == pose.getTime()) {
+                        addAsLandmark(trackedObject, pose);
+                        this.trackedObjects.remove(trackedObject);
+                    }
+                }
             }
         }
     }
@@ -76,16 +80,18 @@ public class FusionSlam {
         for (CloudPoint objectCloudPoint : trackedObject.getCoordinates()){
             double xLocal = objectCloudPoint.getX();
             double yLocal = objectCloudPoint.getY();
-            double xGlobal = (cosRad * xLocal) - (sinRad * yLocal) + xRobot;
-            double yGlobal = (sinRad * xLocal) + (cosRad * yLocal) + yRobot;
+            double xGlobal = (Math.cos(rad) * xLocal) - (Math.sin(rad) * yLocal) + xRobot;
+            double yGlobal = (Math.sin(rad) * xLocal) + (Math.cos(rad) * yLocal) + yRobot;
             CloudPoint newCloudPoint = new CloudPoint(xGlobal, yGlobal);
             coordinates.add(newCloudPoint);
         }
-        int oldSize = this.landMarks.size();
+        boolean isExist = false;
         LandMark newLandmark = new LandMark(trackedObject.getId(), trackedObject.getDescription(), coordinates);
         while(landmarkIter.hasNext()){
             LandMark currentLandmark = landmarkIter.next();
-            if (currentLandmark.getId() == newLandmark.getId()){
+            if (currentLandmark.getId().equals(newLandmark.getId())){
+                System.out.println("Object already a Landmark");
+                isExist = true;
                 this.getLandMarks().remove(currentLandmark);
                 ConcurrentLinkedQueue<CloudPoint> avgCoordinates = new ConcurrentLinkedQueue<CloudPoint>();
                 Iterator<CloudPoint> oldCoordinatesIterator = currentLandmark.getCoordinates().iterator();
@@ -96,11 +102,21 @@ public class FusionSlam {
                     CloudPoint avgCloudPoint = new CloudPoint((oldCloudPoint.getX()+newCloudPoint.getX())/2.0 , (oldCloudPoint.getY()+newCloudPoint.getY())/2.0);
                     avgCoordinates.add(avgCloudPoint);
                 }
+                //if one object has more coordinates
+                Iterator<CloudPoint> lastIterator = newCoordinatesIterator;
+                if (oldCoordinatesIterator.hasNext()){
+                    lastIterator = oldCoordinatesIterator;
+                }
+                while (lastIterator.hasNext()){
+                    avgCoordinates.add(lastIterator.next());
+                }
                 newLandmark.setCoordinates(avgCoordinates);
             }
         }
-            this.landMarks.add(newLandmark);
-        int newSize = this.landMarks.size();
-        StatisticalFolder.getInstance().compareAndSetNumLandmarks(oldSize , newSize);
+        if(!isExist){
+            System.out.println("instance has " + StatisticalFolder.getInstance().getNumLandmarks().intValue() + " and about to be plus 1 because object " + newLandmark.getId());
+            StatisticalFolder.getInstance().addNumLandmarks(1);
+        }
+        this.landMarks.add(newLandmark);
     }
 }

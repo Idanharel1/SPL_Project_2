@@ -20,6 +20,7 @@ private StampedDetectedObjects lastFrames;
         this.frequency = frequency;
         this.status = STATUS.UP;
         this.detectedObjectsList = new ConcurrentLinkedQueue<StampedDetectedObjects>();
+        this.lastFrames = null;
     }
 
     public int getId() {
@@ -43,6 +44,7 @@ private StampedDetectedObjects lastFrames;
     }
 
     public void setLastFrames(StampedDetectedObjects lastFrames) {
+        System.out.println("Placed last frames from time "+lastFrames.getTime());
         this.lastFrames = lastFrames;
     }
 

@@ -20,6 +20,9 @@ public class CrashedBroadcast implements Broadcast {
         ErrorObject error =ErrorObject.getInstance();
         error.setCrashed(true);
         error.setCrashedBroadcast(this);
+        this.lastCamerasFrame.put(null, null);
+        this.lastLidarWorkersFrames.put(null, new ConcurrentLinkedQueue<>());
+
     }
 
     public String getSenderId() {
@@ -51,7 +54,9 @@ public class CrashedBroadcast implements Broadcast {
     }
 
     public void addLastCamerasFrame(Camera camera, StampedDetectedObjects lastCamerasFrame) {
-        this.lastCamerasFrame.putIfAbsent(camera,lastCamerasFrame);
+        if(lastCamerasFrame!=null) {
+            this.lastCamerasFrame.putIfAbsent(camera, lastCamerasFrame);
+        }
     }
 
     public ConcurrentLinkedQueue<Pose> getPoses() {

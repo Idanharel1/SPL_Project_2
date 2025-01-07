@@ -37,6 +37,16 @@ public class GPSIMU {
         return PoseList;
     }
 
+    public boolean isFinishedReading (int currentTime){
+        boolean isFinishedReading = true;
+        for (Pose pose : this.getPoseList()){
+            if (pose.getTime() >= currentTime){
+                isFinishedReading = false;
+            }
+        }
+        return isFinishedReading;
+    }
+
     public void setPoseList(ConcurrentLinkedQueue<Pose> poseList) {
         PoseList = poseList;
     }

@@ -137,28 +137,29 @@ public class GurionRockRunner {
         Path outputJsonPath = parentPath.resolve("simulation_output.json");
         StatisticalFolder instance = StatisticalFolder.getInstance();
         // Prepare data for the JSON file (for example, statistics)
-        Map<String, Object> output = new HashMap<>();
+        Map<String, Object> output = new LinkedHashMap <>();
         output.put("systemRuntime", instance.getSystemRuntime().intValue());
         output.put("numDetectedObjects", instance.getNumDetectedObjects().intValue());
         output.put("numTrackedObjects", instance.getNumTrackedObjects().intValue());
         output.put("numLandmarks", instance.getNumLandmarks().intValue());
 
-        Map<String, Map<String, Object>> landMarksMap = new HashMap<>();
+        Map<String, Map<String, Object>> landMarksMap = new LinkedHashMap<>();
         for (LandMark landMark : FusionSlam.getInstance().getLandMarks()) {
-            Map<String, Object> landmarkDetails = new HashMap<>();
+            Map<String, Object> landmarkDetails = new LinkedHashMap<>();
             landmarkDetails.put("id", landMark.getId());
             landmarkDetails.put("description", landMark.getDescription());
 
-            // Convert CloudPoints to a list of coordinate maps
-            List<Map<String, Double>> coordinates = landMark.getCoordinates().stream()
-                    .map(cloudPoint -> Map.of(
-                            "x", cloudPoint.getX(),
-                            "y", cloudPoint.getY()
-                    ))
-                    .toList();
+            List<Map<String,Double>> coordinatesArr = new ArrayList<>();
+            Iterator<CloudPoint> cloudIter = landMark.getCoordinates().iterator();
+            while (cloudIter.hasNext()){
+                Map<String,Double> coorMap = new LinkedHashMap<>();
+                CloudPoint current = cloudIter.next();
+                coorMap.put("x", current.getX());
+                coorMap.put("y",current.getY());
+                coordinatesArr.add(coorMap);
+            }
 
-            landmarkDetails.put("coordinates", coordinates);
-
+            landmarkDetails.put("coordinates", coordinatesArr);
             // Add the landmark to the main map using the ID as the key
             landMarksMap.put(landMark.getId(), landmarkDetails);
         }
@@ -180,46 +181,47 @@ public class GurionRockRunner {
         Path outputJsonPath = parentPath.resolve("error_simulation_output.json");
         StatisticalFolder instance = StatisticalFolder.getInstance();
         // Prepare data for the JSON file (for example, statistics)
-        Map<String, Object> statistics = new HashMap<>();
+        Map<String, Object> statistics = new LinkedHashMap<>();
         statistics.put("systemRuntime", instance.getSystemRuntime().intValue());
         statistics.put("numDetectedObjects", instance.getNumDetectedObjects().intValue());
         statistics.put("numTrackedObjects", instance.getNumTrackedObjects().intValue());
         statistics.put("numLandmarks", instance.getNumLandmarks().intValue());
 
-        Map<String, Map<String, Object>> landMarksMap = new HashMap<>();
+        Map<String, Map<String, Object>> landMarksMap = new LinkedHashMap<>();
         for (LandMark landMark : FusionSlam.getInstance().getLandMarks()) {
-            Map<String, Object> landmarkDetails = new HashMap<>();
+            Map<String, Object> landmarkDetails = new LinkedHashMap<>();
             landmarkDetails.put("id", landMark.getId());
             landmarkDetails.put("description", landMark.getDescription());
 
-            // Convert CloudPoints to a list of coordinate maps
-            List<Map<String, Double>> coordinates = landMark.getCoordinates().stream()
-                    .map(cloudPoint -> Map.of(
-                            "x", cloudPoint.getX(),
-                            "y", cloudPoint.getY()
-                    ))
-                    .toList();
+            List<Map<String,Double>> coordinatesArr = new ArrayList<>();
+            Iterator<CloudPoint> cloudIter = landMark.getCoordinates().iterator();
+            while (cloudIter.hasNext()){
+                Map<String,Double> coorMap = new LinkedHashMap<>();
+                CloudPoint current = cloudIter.next();
+                coorMap.put("x", current.getX());
+                coorMap.put("y",current.getY());
+                coordinatesArr.add(coorMap);
+            }
 
-            landmarkDetails.put("coordinates", coordinates);
-
+            landmarkDetails.put("coordinates", coordinatesArr);
             // Add the landmark to the main map using the ID as the key
             landMarksMap.put(landMark.getId(), landmarkDetails);
         }
         statistics.put("landmarks", landMarksMap);
-        Map<String, Object> output = new HashMap<>();
+        Map<String, Object> output = new LinkedHashMap<>();
         CrashedBroadcast crashedBroadcast = error.getCrashedBroadcast();
         if(crashedBroadcast!=null) {
             output.put("error", crashedBroadcast.getSenderId());
             output.put("faultySensor", crashedBroadcast.getFaultySensor());
-            Map<String, Object> cameraMap = new HashMap<>();
+            Map<String, Object> cameraMap = new LinkedHashMap<>();
             for (Camera camera : crashedBroadcast.getLastCamerasFrame().keySet()) {
                 StampedDetectedObjects stamped = crashedBroadcast.getLastCamerasFrame().get(camera);
-                Map<String, Object> timeMap = new HashMap<>();
+                Map<String, Object> timeMap = new LinkedHashMap<>();
                 int time = stamped.getTime();
                 timeMap.put("time", time);
                 List<Map<String, Object>> detectedObjectsArray = new ArrayList<>();
                 for (DetectedObject object : stamped.getDetectedObjectsList()) {
-                    Map<String, Object> detectedObject = new HashMap<>();
+                    Map<String, Object> detectedObject = new LinkedHashMap<>();
                     detectedObject.put("id", object.getId());
                     detectedObject.put("description", object.getDescription());
                     detectedObjectsArray.add(detectedObject);
@@ -228,20 +230,20 @@ public class GurionRockRunner {
                 cameraMap.put("Camera" + camera.getId(), timeMap);
             }
             output.put("lastCamerasFrame", cameraMap);
-            Map<String, Object> lidarsMap = new HashMap<>();
+            Map<String, Object> lidarsMap = new LinkedHashMap<>();
             for (LiDarWorkerTracker lidar : crashedBroadcast.getLastLidarWorkersFrames().keySet()) {
                 ConcurrentLinkedQueue<TrackedObject> trackedObjects = crashedBroadcast.getLastLidarWorkersFrames().get(lidar);
                 Iterator<TrackedObject> trackedObjectIter = trackedObjects.iterator();
                 List<Map<String, Object>> trackersArray = new ArrayList<>();
                 while (trackedObjectIter.hasNext()) {
                     TrackedObject current = trackedObjectIter.next();
-                    Map<String, Object> objectMap = new HashMap<>();
+                    Map<String, Object> objectMap = new LinkedHashMap<>();
                     objectMap.put("id", current.getId());
                     objectMap.put("time", current.getTime());
                     objectMap.put("description", current.getDescription());
                     List<Map<String, Object>> coordinatesArray = new ArrayList<>();
                     for (int i = 0; i < current.getCoordinates().length; i++) {
-                        Map<String, Object> axes = new HashMap<>();
+                        Map<String, Object> axes = new LinkedHashMap<>();
                         axes.put("x", current.getCoordinates()[i].getX());
                         axes.put("y", current.getCoordinates()[i].getX());
                         coordinatesArray.add(axes);
@@ -257,7 +259,7 @@ public class GurionRockRunner {
             Iterator<Pose> poseIterator = crashedBroadcast.getPoses().iterator();
             while (poseIterator.hasNext()) {
                 Pose current = poseIterator.next();
-                Map<String, Object> poseMap = new HashMap<>();
+                Map<String, Object> poseMap = new LinkedHashMap<>();
                 poseMap.put("time", current.getTime());
                 poseMap.put("x", current.getX());
                 poseMap.put("y", current.getY());
@@ -348,13 +350,13 @@ public class GurionRockRunner {
                     System.err.println("Thread interrupted while waiting for threadList: " + e);
                 }
             }
-
-            try {
-                timeThread.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // Restore interrupted status
-                System.err.println("Thread interrupted while waiting for timeServiceThread: " + e);
-            }
+//we don't want to wait for the time service to finish if we have the results
+//            try {
+//                timeThread.join();
+//            } catch (InterruptedException e) {
+//                Thread.currentThread().interrupt(); // Restore interrupted status
+//                System.err.println("Thread interrupted while waiting for timeServiceThread: " + e);
+//            }
 
         } catch (Exception e) {
             System.err.println("Unexpected error in main: " + e);
