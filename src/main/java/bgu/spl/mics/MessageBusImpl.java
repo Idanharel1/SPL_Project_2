@@ -52,41 +52,40 @@ public class MessageBusImpl implements MessageBus {
 	// @POST-CONDITION: The MicroService is added to the event map queue.
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-//		synchronized(this.eventQueueHashMap) {
-			this.eventQueueHashMap.get(type).add(m);
-//		}
+		this.eventQueueHashMap.get(type).add(m);
 	}
 
+	// @PRE-CONDITION: The MicroService is registered
+	// @POST-CONDITION: The MicroService is added to the broadcast map queue.
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-//		synchronized(this.broadcastQueueHashMap){
-			this.broadcastQueueHashMap.get(type).add(m);
-//		}
+		this.broadcastQueueHashMap.get(type).add(m);
 	}
 
+	// @PRE-CONDITION: The event is successfully processed and not completed yet.
+	// @POST-CONDITION: The Future associated with the event is resolved with the result.
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-//		synchronized(this.eventFutureHashMapHashMap){
 		if (this.eventFutureHashMapHashMap.get(e)!=null) {
 			this.eventFutureHashMapHashMap.get(e).resolve(result);
-//		}
 		}
 	}
 
+	// @PRE-CONDITION: MicroServices are subscribed to the broadcast message
+	// @POST-CONDITION: The broadcast message is added to the queues of all subscribed MicroServices.
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		for (MicroService m : broadcastQueueHashMap.get(b.getClass())){
 			synchronized (microServiceQueueHashMap.get(m)){
-
 				microServiceQueueHashMap.get(m).add(b);
 				microServiceQueueHashMap.get(m).notifyAll();
 			// we know that each iteraion wakes up all threads but it is better when microservice is treating each message independetly
 			}
-//			this.broadcastQueueHashMap.notifyAll();
 		}
 	}
 
-	
+	// @PRE-CONDITION: The event is valid. At least one MicroService is subscribed to the event.
+	// @POST-CONDITION: The event is sent to the appropriate MicroService, moves him to be ast in line and Future is returned.
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
 		MicroService current = null;
@@ -100,10 +99,7 @@ public class MessageBusImpl implements MessageBus {
 		if(current!=null) {
 			synchronized (microServiceQueueHashMap.get(current)) {
 				future = new Future<T>();
-//				synchronized(this.eventFutureHashMapHashMap) {
 					this.eventFutureHashMapHashMap.put(e, future);
-//				}
-
 				this.microServiceQueueHashMap.get(current).add(e);
 				this.microServiceQueueHashMap.get(current).notifyAll();
 			}
@@ -119,25 +115,22 @@ public class MessageBusImpl implements MessageBus {
 		microServiceQueueHashMap.put(m, new ConcurrentLinkedQueue<>());
 	}
 
+	// @PRE-CONDITION: The MicroService has been registered and is not processing messages.
+	// @POST-CONDITION: The MicroService is removed from the list of registered MicroServices, and no queues exist for it.
 	@Override
 	public void unregister(MicroService m) {
-//		synchronized(this.microServiceQueueHashMap) {
-			//removes its queue from microServiceQueueHashMap
-			microServiceQueueHashMap.remove(m);
-//		}
-//		synchronized(this.eventQueueHashMap) {
-			//removes each appearance in all event / broadcast queues in eventQueueHashMap , broadcastQueueHashMap
-			for (Class<? extends Event> eventType : this.eventQueueHashMap.keySet()) {
-				eventQueueHashMap.get(eventType).remove(m);
-			}
-//		}
-//		synchronized(this.broadcastQueueHashMap) {
-			for (Class<? extends Broadcast> broadcastType : this.broadcastQueueHashMap.keySet()) {
-				broadcastQueueHashMap.get(broadcastType).remove(m);
-			}
-//		}
+		microServiceQueueHashMap.remove(m);
+		//removes each appearance in all event / broadcast queues in eventQueueHashMap , broadcastQueueHashMap
+		for (Class<? extends Event> eventType : this.eventQueueHashMap.keySet()) {
+			eventQueueHashMap.get(eventType).remove(m);
+		}
+		for (Class<? extends Broadcast> broadcastType : this.broadcastQueueHashMap.keySet()) {
+			broadcastQueueHashMap.get(broadcastType).remove(m);
+		}
 	}
 
+	// @PRE-CONDITION: The MicroService is registered.
+	// @POST-CONDITION: The MicroService waits until a message is available and then it is added to its queue and returned.
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		//everytime a microservice gets in locking message bus if he doesn't have an event waiting for him he moves to blocked
@@ -154,6 +147,7 @@ public class MessageBusImpl implements MessageBus {
 		return messsage;
 	}
 
+	//getters for testing purposes only
 	public ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>> getEventQueueHashMap() {
 		return eventQueueHashMap;
 	}

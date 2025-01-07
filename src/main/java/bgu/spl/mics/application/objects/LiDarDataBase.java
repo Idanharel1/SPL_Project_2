@@ -94,7 +94,6 @@ public class LiDarDataBase {
                 JsonArray lidarJson = gson.fromJson(lidarReader, JsonArray.class);
 
                 Iterator jsonIter = lidarJson.iterator();
-                System.out.println(lidarJson.toString());
                 while (jsonIter.hasNext()){
                     JsonObject object = (JsonObject) jsonIter.next();
 

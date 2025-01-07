@@ -53,9 +53,8 @@ public class MessageBusImplTest {
 
     @Test
     public void testSubscribeBroadcast() {
-// @PRE-CONDITION: The MicroService has been registered. The broadcast class is
-// valid.
-// @POST-CONDITION: The MicroService is added to the broadcast subscribers list.
+        // @PRE-CONDITION: The MicroService is registered
+        // @POST-CONDITION: The MicroService is added to the broadcast map queue.
 
         messageBus.register(ms1);
         messageBus.subscribeBroadcast(TickBroadcast.class, ms1);
@@ -65,11 +64,8 @@ public class MessageBusImplTest {
 
     @Test
     public void testSendBroadcast() throws InterruptedException {
-// @PRE-CONDITION: All the MicroServices are registered. The broadcast message
-// is valid.
-// @POST-CONDITION: The broadcast message is added to the queues of all
-// subscribed MicroServices.
-
+    // @PRE-CONDITION: MicroServices are subscribed to the broadcast message
+    // @POST-CONDITION: The broadcast message is added to the queues of all subscribed MicroServices.
         messageBus.register(ms1);
         messageBus.register(ms2);
         messageBus.subscribeBroadcast(TickBroadcast.class, ms1);
@@ -92,10 +88,8 @@ public class MessageBusImplTest {
     @Test
 
     public void testSendEvent() throws InterruptedException {
-// @PRE-CONDITION: The event is valid. At least one MicroService is subscribed
-// to the event.
-// @POST-CONDITION: The event is sent to the appropriate MicroService and Future
-// is returned.
+    // @PRE-CONDITION: The event is valid. At least one MicroService is subscribed to the event.
+    // @POST-CONDITION: The event is sent to the appropriate MicroService, moves him to be ast in line and Future is returned.
 
         messageBus.register(ms1);
         messageBus.subscribeEvent(PoseEvent.class, ms1);
@@ -117,10 +111,9 @@ public class MessageBusImplTest {
 
     @Test
     public void testComplete() throws InterruptedException {
-// @PRE-CONDITION: The event is successfully processed and not completed yet.
-// @POST-CONDITION: The Future associated with the event is resolved with the
-// result.
 
+        // @PRE-CONDITION: The event is successfully processed and not completed yet.
+        // @POST-CONDITION: The Future associated with the event is resolved with the result.
         messageBus.register(ms1);
         messageBus.subscribeEvent(PoseEvent.class, ms1);
         Pose pose = new Pose(7, 3, 30, 8);
@@ -139,10 +132,8 @@ public class MessageBusImplTest {
 
     @Test
     public void testUnregister() {
-// @PRE-CONDITION: The MicroService has been registered and is not processing
-// messages.
-// @POST-CONDITION: The MicroService is removed from the list of registered
-// MicroServices, and no queues exist for it.
+    // @PRE-CONDITION: The MicroService has been registered and is not processing messages.
+    // @POST-CONDITION: The MicroService is removed from the list of registered MicroServices, and no queues exist for it.
 
         messageBus.register(ms1);
         messageBus.unregister(ms1);
@@ -153,7 +144,7 @@ public class MessageBusImplTest {
     @Test
     public void testAwaitMessage() throws InterruptedException {
 // @PRE-CONDITION: The MicroService is registered.
-// @POST-CONDITION: The MicroService waits until a message is available.
+// @POST-CONDITION: The MicroService waits until a message is available and then it is added to its queue.
 
         messageBus.register(ms1);
         messageBus.subscribeBroadcast(TickBroadcast.class, ms1);

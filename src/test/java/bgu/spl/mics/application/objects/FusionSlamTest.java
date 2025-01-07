@@ -8,9 +8,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for FusionSlam transformation logic
  */
+
+//need to run each test seperately or to order them
+
 public class FusionSlamTest {
     private FusionSlam fusionSlam;
     private TrackedObject trackedObject;
+    private TrackedObject trackedObject2;
     private Pose pose1;
     private Pose pose2;
 
@@ -23,7 +27,16 @@ public class FusionSlamTest {
                 new CloudPoint(1.0, 1.0),
                 new CloudPoint(2.0, 2.0)
         };
+
+        // Second detection with slightly different coordinates
+        CloudPoint[] coordinates2 = new CloudPoint[]{
+                new CloudPoint(1.2, 1.2),
+                new CloudPoint(2.2, 2.2)
+        };
+
         trackedObject = new TrackedObject("test-object", 1, "Test Object", coordinates);
+        trackedObject2 = new TrackedObject("test-object", 2, "Test Object", coordinates2);
+
         pose1 = new Pose(4.0f, 0.0f, 90.0f, 1); // 90 degree rotation
         pose2 = new Pose(4.0f, 0.0f, 90.0f, 2); // 90 degree rotation
 
@@ -68,12 +81,6 @@ public class FusionSlamTest {
         objects1.add(trackedObject);
         fusionSlam.addTrackedObject(objects1);
 
-        // Second detection with slightly different coordinates
-        CloudPoint[] coordinates2 = new CloudPoint[]{
-                new CloudPoint(1.2, 1.2),
-                new CloudPoint(2.2, 2.2)
-        };
-        TrackedObject trackedObject2 = new TrackedObject("test-object", 2, "Test Object", coordinates2);
         ConcurrentLinkedQueue<TrackedObject> objects2 = new ConcurrentLinkedQueue<>();
         objects2.add(trackedObject2);
         fusionSlam.addTrackedObject(objects2);

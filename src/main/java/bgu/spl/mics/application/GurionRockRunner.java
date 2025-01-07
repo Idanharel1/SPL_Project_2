@@ -40,7 +40,6 @@ public class GurionRockRunner {
             Iterator<JsonElement> camerasJsonIter = camerasToCreate.iterator();
             while (camerasJsonIter.hasNext()){
                 JsonElement currentCameraJson = camerasJsonIter.next();
-                System.out.println(currentCameraJson.getAsJsonObject().get("id").getAsInt() + " " + currentCameraJson.getAsJsonObject().get("frequency").getAsInt());
                 String cameraDataPathString = jsonObject.get("Cameras").getAsJsonObject().get("camera_datas_path").getAsString();
                 Path cameraDataPath = Paths.get(filePath).getParent();
                 cameraDataPathString = cameraDataPath.resolve(cameraDataPathString).toString();
@@ -121,7 +120,6 @@ public class GurionRockRunner {
         try (FileReader configReader = new FileReader(posepath)) {
             JsonArray objects = gson.fromJson(configReader, JsonArray.class);
             for(JsonElement object : objects) {
-                System.out.println(object.getAsJsonObject().get("time").getAsInt());
                 Pose p1 = new Pose(object.getAsJsonObject().get("x").getAsFloat(), object.getAsJsonObject().get("y").getAsFloat(),
                         object.getAsJsonObject().get("yaw").getAsFloat(), object.getAsJsonObject().get("time").getAsInt());
                 poseList.add(p1);
@@ -134,7 +132,7 @@ public class GurionRockRunner {
         return gps;
     }
     public static void createOutputFile(Path parentPath){
-        Path outputJsonPath = parentPath.resolve("output3.json");
+        Path outputJsonPath = parentPath.resolve("simulation_output.json");
         StatisticalFolder instance = StatisticalFolder.getInstance();
         // Prepare data for the JSON file (for example, statistics)
         Map<String, Object> output = new HashMap<>();
@@ -177,7 +175,7 @@ public class GurionRockRunner {
         }
     }
     public static void createOutputFileWithErrors(Path parentPath, ErrorObject error){
-        Path outputJsonPath = parentPath.resolve("output3.json");
+        Path outputJsonPath = parentPath.resolve("error_simulation_output.json");
         StatisticalFolder instance = StatisticalFolder.getInstance();
         // Prepare data for the JSON file (for example, statistics)
 
@@ -273,7 +271,7 @@ public class GurionRockRunner {
         try {
             // Write the JSON data to the file, creating it if it doesn't exist
             Files.write(outputJsonPath, jsonString.getBytes());
-            System.out.println("Statistics successfully written to: " + outputJsonPath.toAbsolutePath());
+            System.out.println("Statistics and Error logs successfully written to: " + outputJsonPath.toAbsolutePath());
         } catch (IOException e) {
             e.printStackTrace();
         }
