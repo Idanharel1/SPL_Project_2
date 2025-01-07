@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TerminatedBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.StatisticalFolder;
 
@@ -37,6 +38,13 @@ public class TimeService extends MicroService {
      */
     @Override
     protected void initialize() {
+        /*
+        this.subscribeBroadcast(TerminatedBroadcast.class, (TerminatedBroadcast terminate) ->{
+            if (terminate.getSenderId().equals("FusionSlam")){
+                System.out.println("TimeService got terminated from "+ terminate.getSenderId());
+                terminate();
+            }
+        });*/
         // Guaranteed delay before the first tick broadcast
         try {
             Thread.sleep(3000);  // Sleep for 1 second (adjust as needed)
@@ -44,7 +52,7 @@ public class TimeService extends MicroService {
             Thread.currentThread().interrupt();
             System.err.println("TimeService interrupted during startup delay");
         }
-        for (int i = 0; i < this.DURATION; i++) {
+        for (int i = 0; i < this.DURATION; i++) { // && !isTerminated()
             this.tickCounter++;
             System.out.println("Time service sent tick " + this.tickCounter);
             this.sendBroadcast(new TickBroadcast(this.getName(),this.tickCounter));
@@ -54,7 +62,9 @@ public class TimeService extends MicroService {
                 Thread.currentThread().interrupt();
             }
         }
-        this.terminate();
-        Thread.currentThread().interrupt();
+        if(!isTerminated()) {
+            this.terminate();
+            Thread.currentThread().interrupt();
+        }
     }
 }

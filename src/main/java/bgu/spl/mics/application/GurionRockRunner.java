@@ -211,60 +211,66 @@ public class GurionRockRunner {
         Map<String, Object> output = new LinkedHashMap<>();
         CrashedBroadcast crashedBroadcast = error.getCrashedBroadcast();
         if(crashedBroadcast!=null) {
-            output.put("error", crashedBroadcast.getSenderId());
+            output.put("error", crashedBroadcast.getErrorMessage());
             output.put("faultySensor", crashedBroadcast.getFaultySensor());
             Map<String, Object> cameraMap = new LinkedHashMap<>();
-            for (Camera camera : crashedBroadcast.getLastCamerasFrame().keySet()) {
-                StampedDetectedObjects stamped = crashedBroadcast.getLastCamerasFrame().get(camera);
-                Map<String, Object> timeMap = new LinkedHashMap<>();
-                int time = stamped.getTime();
-                timeMap.put("time", time);
-                List<Map<String, Object>> detectedObjectsArray = new ArrayList<>();
-                for (DetectedObject object : stamped.getDetectedObjectsList()) {
-                    Map<String, Object> detectedObject = new LinkedHashMap<>();
-                    detectedObject.put("id", object.getId());
-                    detectedObject.put("description", object.getDescription());
-                    detectedObjectsArray.add(detectedObject);
+            if(crashedBroadcast.getLastCamerasFrame()!=null) {
+                for (Camera camera : crashedBroadcast.getLastCamerasFrame().keySet()) {
+                    StampedDetectedObjects stamped = crashedBroadcast.getLastCamerasFrame().get(camera);
+                    Map<String, Object> timeMap = new LinkedHashMap<>();
+                    int time = stamped.getTime();
+                    timeMap.put("time", time);
+                    List<Map<String, Object>> detectedObjectsArray = new ArrayList<>();
+                    for (DetectedObject object : stamped.getDetectedObjectsList()) {
+                        Map<String, Object> detectedObject = new LinkedHashMap<>();
+                        detectedObject.put("id", object.getId());
+                        detectedObject.put("description", object.getDescription());
+                        detectedObjectsArray.add(detectedObject);
+                    }
+                    timeMap.put("detectedObjects", detectedObjectsArray);
+                    cameraMap.put("Camera" + camera.getId(), timeMap);
                 }
-                timeMap.put("detectedObjects", detectedObjectsArray);
-                cameraMap.put("Camera" + camera.getId(), timeMap);
             }
             output.put("lastCamerasFrame", cameraMap);
             Map<String, Object> lidarsMap = new LinkedHashMap<>();
-            for (LiDarWorkerTracker lidar : crashedBroadcast.getLastLidarWorkersFrames().keySet()) {
-                ConcurrentLinkedQueue<TrackedObject> trackedObjects = crashedBroadcast.getLastLidarWorkersFrames().get(lidar);
-                Iterator<TrackedObject> trackedObjectIter = trackedObjects.iterator();
-                List<Map<String, Object>> trackersArray = new ArrayList<>();
-                while (trackedObjectIter.hasNext()) {
-                    TrackedObject current = trackedObjectIter.next();
-                    Map<String, Object> objectMap = new LinkedHashMap<>();
-                    objectMap.put("id", current.getId());
-                    objectMap.put("time", current.getTime());
-                    objectMap.put("description", current.getDescription());
-                    List<Map<String, Object>> coordinatesArray = new ArrayList<>();
-                    for (int i = 0; i < current.getCoordinates().length; i++) {
-                        Map<String, Object> axes = new LinkedHashMap<>();
-                        axes.put("x", current.getCoordinates()[i].getX());
-                        axes.put("y", current.getCoordinates()[i].getX());
-                        coordinatesArray.add(axes);
+            if(crashedBroadcast.getLastLidarWorkersFrames()!=null) {
+                for (LiDarWorkerTracker lidar : crashedBroadcast.getLastLidarWorkersFrames().keySet()) {
+                    ConcurrentLinkedQueue<TrackedObject> trackedObjects = crashedBroadcast.getLastLidarWorkersFrames().get(lidar);
+                    Iterator<TrackedObject> trackedObjectIter = trackedObjects.iterator();
+                    List<Map<String, Object>> trackersArray = new ArrayList<>();
+                    while (trackedObjectIter.hasNext()) {
+                        TrackedObject current = trackedObjectIter.next();
+                        Map<String, Object> objectMap = new LinkedHashMap<>();
+                        objectMap.put("id", current.getId());
+                        objectMap.put("time", current.getTime());
+                        objectMap.put("description", current.getDescription());
+                        List<Map<String, Object>> coordinatesArray = new ArrayList<>();
+                        for (int i = 0; i < current.getCoordinates().length; i++) {
+                            Map<String, Object> axes = new LinkedHashMap<>();
+                            axes.put("x", current.getCoordinates()[i].getX());
+                            axes.put("y", current.getCoordinates()[i].getX());
+                            coordinatesArray.add(axes);
+                        }
+                        objectMap.put("coordinates", coordinatesArray);
+                        trackersArray.add(objectMap);
                     }
-                    objectMap.put("coordinates", coordinatesArray);
-                    trackersArray.add(objectMap);
+                    lidarsMap.put("LiDarWorkerTracker" + lidar.getId(), trackersArray);
                 }
-                lidarsMap.put("LiDarWorkerTracker" + lidar.getId(), trackersArray);
             }
             output.put("lastLiDarWorkerTrackersFrame", lidarsMap);
 
             List<Map<String, Object>> posesArray = new ArrayList<>();
-            Iterator<Pose> poseIterator = crashedBroadcast.getPoses().iterator();
-            while (poseIterator.hasNext()) {
-                Pose current = poseIterator.next();
-                Map<String, Object> poseMap = new LinkedHashMap<>();
-                poseMap.put("time", current.getTime());
-                poseMap.put("x", current.getX());
-                poseMap.put("y", current.getY());
-                poseMap.put("yaw", current.getYaw());
-                posesArray.add(poseMap);
+            if(crashedBroadcast.getPoses()!=null){
+                Iterator<Pose> poseIterator = crashedBroadcast.getPoses().iterator();
+                while (poseIterator.hasNext()) {
+                    Pose current = poseIterator.next();
+                    Map<String, Object> poseMap = new LinkedHashMap<>();
+                    poseMap.put("time", current.getTime());
+                    poseMap.put("x", current.getX());
+                    poseMap.put("y", current.getY());
+                    poseMap.put("yaw", current.getYaw());
+                    posesArray.add(poseMap);
+                }
             }
             output.put("poses", posesArray);
         }

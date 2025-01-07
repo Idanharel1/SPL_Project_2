@@ -14,12 +14,14 @@ public class LiDarWorkerTracker {
     private final int frequency;
     private STATUS status;
     private ConcurrentLinkedQueue<TrackedObject> lastTrackedObjects;
+    private ConcurrentLinkedQueue<TrackedObject> lastLidarWorkersFrames;
 
     public LiDarWorkerTracker(int id, int frequency){
         this.id = id;
         this.frequency = frequency;
         this.status = STATUS.UP;
         this.lastTrackedObjects = new ConcurrentLinkedQueue<TrackedObject>();
+        this.lastLidarWorkersFrames = new ConcurrentLinkedQueue<TrackedObject>();
     }
 
     public int getId() {
@@ -40,6 +42,14 @@ public class LiDarWorkerTracker {
 
     public void setStatus(STATUS status) {
         this.status = status;
+    }
+
+    public ConcurrentLinkedQueue<TrackedObject> getLastLidarWorkersFrames() {
+        return lastLidarWorkersFrames;
+    }
+
+    public void setLastLidarWorkersFrames(ConcurrentLinkedQueue<TrackedObject> lastLidarWorkersFrames) {
+        this.lastLidarWorkersFrames = lastLidarWorkersFrames;
     }
 
     public ConcurrentLinkedQueue<TrackedObject> getLastTrackedObject() {

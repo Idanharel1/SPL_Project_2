@@ -56,6 +56,7 @@ private GPSIMU gps;
             }
         });
         this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            System.out.println("Pose Service got crashed broadcast from "+crashed.getSenderId());
             if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("LidarWorker")) || (crashed.getSenderId().equals("Camera")) || (crashed.getSenderId().equals("FusionSlam"))){
                 crashed.setPoses(this.gps.posesUntilTick(this.gps.getCurrentTick()));
                 terminate();

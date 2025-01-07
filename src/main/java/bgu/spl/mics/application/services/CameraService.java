@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CrashedBroadcast;
 import bgu.spl.mics.application.messages.DetectedObjectsEvent;
@@ -53,10 +54,11 @@ public class CameraService extends MicroService {
                             if (object.getId().equals("ERROR")){
                                 System.out.println("Camera recognized an ERROR at time "+currentTime);
                                 this.camera.setStatus(STATUS.ERROR);
-                                CrashedBroadcast crashedBroadcast = new CrashedBroadcast("Camera disconnected");
+                                CrashedBroadcast crashedBroadcast = new CrashedBroadcast(this.getName());
+                                crashedBroadcast.setErrorMessage("Camera disconnected");
                                 crashedBroadcast.setFaultySensor(this.getName()+this.camera.getId());
                                 crashedBroadcast.addLastCamerasFrame(this.camera ,this.camera.getLastFrames());
-                                sendBroadcast(crashedBroadcast);
+                                this.sendBroadcast(crashedBroadcast);
                                 terminate();
                                 break;
                             }
@@ -84,6 +86,7 @@ public class CameraService extends MicroService {
             }
         });
         this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            System.out.println("Camera Service got crashed broadcast from "+crashed.getSenderId());
             if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("LidarWorker")) || (crashed.getSenderId().equals("PoseService")) || (crashed.getSenderId().equals("FusionSlam"))){
                 crashed.addLastCamerasFrame(this.camera ,this.camera.getLastFrames());
                 terminate();

@@ -60,6 +60,21 @@ public class LiDarService extends MicroService {
             System.out.println("Lidar got tick "+ tickBroadcast.getTickCounter());
             if(liDarWorkerTracker.getStatus() == STATUS.UP) {
                 int currentTime = tickBroadcast.getTickCounter();
+
+                if (LiDarDataBase.getInstance().isFinishedReading(currentTime - this.liDarWorkerTracker.getFrequency())){
+                    this.liDarWorkerTracker.setStatus(STATUS.DOWN);
+                    terminate();
+                }
+                else if (LiDarDataBase.getInstance().isErrorInTime(currentTime - this.liDarWorkerTracker.getFrequency())){
+                    System.out.println("Camera recognized an ERROR at time "+currentTime);
+                    this.liDarWorkerTracker.setStatus(STATUS.ERROR);
+                    CrashedBroadcast crashedBroadcast = new CrashedBroadcast(this.getName());
+                    crashedBroadcast.setErrorMessage("Sensor LidarWorker disconnected");
+                    crashedBroadcast.setFaultySensor(this.getName()+this.liDarWorkerTracker.getId());
+                    crashedBroadcast.addLastLidarWorkersFrames(this.liDarWorkerTracker , this.liDarWorkerTracker.getLastLidarWorkersFrames());
+                    sendBroadcast(crashedBroadcast);
+                    terminate();
+                }
                 if (!this.liDarWorkerTracker.getLastTrackedObject().isEmpty()) {
                     ConcurrentLinkedQueue<TrackedObject> trackedObjectsToSend = new ConcurrentLinkedQueue<>();
                     ConcurrentLinkedQueue<TrackedObject> pendingObjects = new ConcurrentLinkedQueue<>();
@@ -73,6 +88,7 @@ public class LiDarService extends MicroService {
                         }
                     }
                     if (!trackedObjectsToSend.isEmpty()) {
+                        this.liDarWorkerTracker.setLastLidarWorkersFrames(trackedObjectsToSend);
                         System.out.println("Lidar sends tracked object "+ trackedObjectsToSend.peek().getId());
                         StatisticalFolder.getInstance().addTrackedObjects(trackedObjectsToSend.size());
                         this.sendEvent(new TrackedObjectsEvent(trackedObjectsToSend));
@@ -80,19 +96,6 @@ public class LiDarService extends MicroService {
                     this.liDarWorkerTracker.setLastTrackedObject(pendingObjects);
                 }
 
-                if (LiDarDataBase.getInstance().isFinishedReading(currentTime - this.liDarWorkerTracker.getFrequency())){
-                    this.liDarWorkerTracker.setStatus(STATUS.DOWN);
-                    terminate();
-                }
-                else if (LiDarDataBase.getInstance().isErrorInTime(currentTime - this.liDarWorkerTracker.getFrequency())){
-                    System.out.println("Camera recognized an ERROR at time "+currentTime);
-                    this.liDarWorkerTracker.setStatus(STATUS.ERROR);
-                    CrashedBroadcast crashedBroadcast = new CrashedBroadcast("Sensor LidarWorker disconnected");
-                    crashedBroadcast.setFaultySensor(this.getName()+this.liDarWorkerTracker.getId());
-                    crashedBroadcast.addLastLidarWorkersFrames(this.liDarWorkerTracker , this.liDarWorkerTracker.getLastTrackedObject());
-                    sendBroadcast(crashedBroadcast);
-                    terminate();
-                }
             }
             else {
                 terminate();
@@ -105,8 +108,9 @@ public class LiDarService extends MicroService {
             }
         });
         this.subscribeBroadcast(CrashedBroadcast.class, (CrashedBroadcast crashed) ->{
+            System.out.println("lidar Service got crashed broadcast from "+crashed.getSenderId());
             if((crashed.getSenderId().equals("TimeService")) || (crashed.getSenderId().equals("Camera")) || (crashed.getSenderId().equals("PoseService")) || (crashed.getSenderId().equals("FusionSlam"))){
-                crashed.addLastLidarWorkersFrames(this.liDarWorkerTracker , this.liDarWorkerTracker.getLastTrackedObject());
+                crashed.addLastLidarWorkersFrames(this.liDarWorkerTracker , this.liDarWorkerTracker.getLastLidarWorkersFrames());
                 terminate();
             }
         });

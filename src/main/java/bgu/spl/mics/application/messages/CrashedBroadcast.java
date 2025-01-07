@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class CrashedBroadcast implements Broadcast {
 
     private String senderId;
+    private String errorMessage;
     private String faultySensor;
     private HashMap<Camera, StampedDetectedObjects> lastCamerasFrame;
     private HashMap<LiDarWorkerTracker, ConcurrentLinkedQueue<TrackedObject>> lastLidarWorkersFrames;
@@ -20,8 +21,8 @@ public class CrashedBroadcast implements Broadcast {
         ErrorObject error =ErrorObject.getInstance();
         error.setCrashed(true);
         error.setCrashedBroadcast(this);
-        this.lastCamerasFrame.put(null, null);
-        this.lastLidarWorkersFrames.put(null, new ConcurrentLinkedQueue<>());
+        this.lastCamerasFrame = new HashMap<>();
+        this.lastLidarWorkersFrames = new HashMap<>();
 
     }
 
@@ -31,6 +32,14 @@ public class CrashedBroadcast implements Broadcast {
 
     public void setSenderId(String senderId) {
         this.senderId = senderId;
+    }
+
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 
     public String getFaultySensor() {

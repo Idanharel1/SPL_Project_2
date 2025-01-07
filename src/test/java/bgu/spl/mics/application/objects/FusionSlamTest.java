@@ -15,8 +15,12 @@ public class FusionSlamTest {
     private FusionSlam fusionSlam;
     private TrackedObject trackedObject;
     private TrackedObject trackedObject2;
+    private TrackedObject trackedObject3;
+
     private Pose pose1;
     private Pose pose2;
+    private Pose pose3;
+
 
 
     @BeforeEach
@@ -34,11 +38,13 @@ public class FusionSlamTest {
                 new CloudPoint(2.2, 2.2)
         };
 
-        trackedObject = new TrackedObject("test-object", 1, "Test Object", coordinates);
-        trackedObject2 = new TrackedObject("test-object", 2, "Test Object", coordinates2);
+        trackedObject = new TrackedObject("test-object1", 1, "Test Object", coordinates);
+        trackedObject2 = new TrackedObject("test-object", 2, "Test Object", coordinates);
+        trackedObject3 = new TrackedObject("test-object", 3, "Test Object", coordinates2);
 
         pose1 = new Pose(4.0f, 0.0f, 90.0f, 1); // 90 degree rotation
         pose2 = new Pose(4.0f, 0.0f, 90.0f, 2); // 90 degree rotation
+        pose3 = new Pose(4.0f, 0.0f, 90.0f, 3); // 90 degree rotation
 
     }
 
@@ -73,22 +79,22 @@ public class FusionSlamTest {
     @Test
     public void testLandmarkAveraging() {
         // Test that when the same object is detected multiple times, coordinates are averaged
-        fusionSlam.addPose(pose1);
         fusionSlam.addPose(pose2);
+        fusionSlam.addPose(pose3);
 
         // First detection
         ConcurrentLinkedQueue<TrackedObject> objects1 = new ConcurrentLinkedQueue<>();
-        objects1.add(trackedObject);
+        objects1.add(trackedObject2);
         fusionSlam.addTrackedObject(objects1);
 
         ConcurrentLinkedQueue<TrackedObject> objects2 = new ConcurrentLinkedQueue<>();
-        objects2.add(trackedObject2);
+        objects2.add(trackedObject3);
         fusionSlam.addTrackedObject(objects2);
 
         // Verify the coordinates were averaged
         LandMark landmark = null;
         for (LandMark lm : fusionSlam.getLandMarks()) {
-            if (lm.getId().equals(trackedObject.getId())) {
+            if (lm.getId().equals(trackedObject2.getId())) {
                 landmark = lm;
                 break;
             }
