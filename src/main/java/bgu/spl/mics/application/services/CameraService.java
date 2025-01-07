@@ -56,7 +56,7 @@ public class CameraService extends MicroService {
                                 this.camera.setStatus(STATUS.ERROR);
                                 CrashedBroadcast crashedBroadcast = new CrashedBroadcast(this.getName());
                                 crashedBroadcast.setErrorMessage("Camera disconnected");
-                                crashedBroadcast.setFaultySensor(this.getName()+this.camera.getId());
+                                crashedBroadcast.setFaultySensor(this.getName()+ " " + this.camera.getId());
                                 crashedBroadcast.addLastCamerasFrame(this.camera ,this.camera.getLastFrames());
                                 this.sendBroadcast(crashedBroadcast);
                                 terminate();

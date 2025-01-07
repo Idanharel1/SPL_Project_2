@@ -6,11 +6,17 @@ import bgu.spl.mics.application.objects.Pose;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+/**
+ * Unit tests for MessageBusImpl transformation logic
+ * Class Invariants:
+ * - eventQueueHashMap, broadcastQueueHashMap, microServiceQueueHashMap are never null
+ * - eventFutureHashMapHashMap is never null
+ * - Each MicroService appears only once as a key in microServiceQueueHashMap
+ * - All queues in the HashMaps are non-null ConcurrentLinkedQueues
+ * - Each MicroService subscribed to an event exists in the microServiceQueueHashMap */
 
 public class MessageBusImplTest {
 

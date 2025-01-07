@@ -5,10 +5,17 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import static org.junit.jupiter.api.Assertions.*;
 
+
 /**
  * Unit tests for Camera data preparation and error handling
- * Class Invariant: Camera maintains valid ID and frequency throughout all operations
+ Class Invariants:
+ * - camera instance is never null
+ * - camera.id is positive number
+ * - camera.frequency is >= 0
+ * - camera.detectedObjectsList is never null
+ * - All StampedDetectedObjects in detectedObjectsList have non-null DetectedObject lists
  */
+
 public class CameraTest {
     private Camera camera;
     private StampedDetectedObjects stampedObjects;

@@ -131,7 +131,7 @@ public class GurionRockRunner {
         return gps;
     }
     public static void createOutputFile(Path parentPath){
-        Path outputJsonPath = parentPath.resolve("simulation_output.json");
+        Path outputJsonPath = parentPath.resolve("output_file.json");
         StatisticalFolder instance = StatisticalFolder.getInstance();
         // Prepare data for the JSON file (for example, statistics)
         Map<String, Object> output = new LinkedHashMap <>();
@@ -175,7 +175,7 @@ public class GurionRockRunner {
         }
     }
     public static void createOutputFileWithErrors(Path parentPath, ErrorObject error){
-        Path outputJsonPath = parentPath.resolve("error_simulation_output.json");
+        Path outputJsonPath = parentPath.resolve("OutputError.json");
         StatisticalFolder instance = StatisticalFolder.getInstance();
         // Prepare data for the JSON file (for example, statistics)
         Map<String, Object> statistics = new LinkedHashMap<>();

@@ -7,7 +7,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit tests for FusionSlam transformation logic
- * Class Invariant: FusionSlam instance maintains consistent state between operations;
+ * FusionSlamTest Class
+ * Class Invariants:
+ * - fusionSlam instance is never null and is a singleton
+ * - trackedObject coordinates are never null
+ * - pose values (x,y,yaw) are valid numbers
+ * - landMarks collection in fusionSlam is never null
+ * - trackedObject.time >= 0
+ * - All CloudPoints have valid coordinates
  */
 
 

@@ -70,7 +70,7 @@ public class LiDarService extends MicroService {
                     this.liDarWorkerTracker.setStatus(STATUS.ERROR);
                     CrashedBroadcast crashedBroadcast = new CrashedBroadcast(this.getName());
                     crashedBroadcast.setErrorMessage("Sensor LidarWorker disconnected");
-                    crashedBroadcast.setFaultySensor(this.getName()+this.liDarWorkerTracker.getId());
+                    crashedBroadcast.setFaultySensor(this.getName()+  " " +this.liDarWorkerTracker.getId());
                     crashedBroadcast.addLastLidarWorkersFrames(this.liDarWorkerTracker , this.liDarWorkerTracker.getLastLidarWorkersFrames());
                     sendBroadcast(crashedBroadcast);
                     terminate();
