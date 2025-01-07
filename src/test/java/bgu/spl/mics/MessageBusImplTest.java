@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static org.junit.jupiter.api.Assertions.*;
 /**
- * Unit tests for MessageBusImpl transformation logic
  * Class Invariants:
  * - eventQueueHashMap, broadcastQueueHashMap, microServiceQueueHashMap are never null
  * - eventFutureHashMapHashMap is never null

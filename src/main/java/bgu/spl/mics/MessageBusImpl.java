@@ -15,6 +15,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Only one public method (in addition to getters which can be public solely for unit testing) may be added to this class
  * All other methods and members you add the class must be private.
  */
+/**
+ * Class Invariants:
+ * - eventQueueHashMap, broadcastQueueHashMap, microServiceQueueHashMap are never null
+ * - eventFutureHashMapHashMap is never null
+ * - Each MicroService appears only once as a key in microServiceQueueHashMap
+ * - All queues in the HashMaps are non-null ConcurrentLinkedQueues
+ * - Each MicroService subscribed to an event exists in the microServiceQueueHashMap */
+
+
+
 public class MessageBusImpl implements MessageBus {
 	//holds Queue per event / broadcast to know which microservices are registered to it
 	private ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<MicroService>> eventQueueHashMap;

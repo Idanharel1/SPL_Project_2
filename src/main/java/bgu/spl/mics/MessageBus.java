@@ -9,6 +9,15 @@ package bgu.spl.mics;
  * You must not alter any of the given methods of this interface. 
  * You cannot add methods to this interface.
  */
+
+/**
+ * Class Invariants:
+ * - eventQueueHashMap, broadcastQueueHashMap, microServiceQueueHashMap are never null
+ * - eventFutureHashMapHashMap is never null
+ * - Each MicroService appears only once as a key in microServiceQueueHashMap
+ * - All queues in the HashMaps are non-null ConcurrentLinkedQueues
+ * - Each MicroService subscribed to an event exists in the microServiceQueueHashMap */
+
 public interface MessageBus {
 
     /**
@@ -18,6 +27,9 @@ public interface MessageBus {
      * @param type The type to subscribe to,
      * @param m    The subscribing micro-service.
      */
+
+    // @PRE-CONDITION: The MicroService is registered
+    // @POST-CONDITION: The MicroService is added to the event map queue
     <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m);
 
     /**
@@ -26,6 +38,9 @@ public interface MessageBus {
      * @param type 	The type to subscribe to.
      * @param m    	The subscribing micro-service.
      */
+
+    // @PRE-CONDITION: The MicroService is registered
+    // @POST-CONDITION: The MicroService is added to the broadcast map queue.
     void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m);
 
     /**
@@ -38,6 +53,9 @@ public interface MessageBus {
      * @param e      The completed event.
      * @param result The resolved result of the completed event.
      */
+
+    // @PRE-CONDITION: The event is successfully processed and not completed yet.
+    // @POST-CONDITION: The Future associated with the event is resolved with the result.
     <T> void complete(Event<T> e, T result);
 
     /**
@@ -46,6 +64,9 @@ public interface MessageBus {
      * <p>
      * @param b 	The message to added to the queues.
      */
+
+    // @PRE-CONDITION: MicroServices are subscribed to the broadcast message
+    // @POST-CONDITION: The broadcast message is added to the queues of all subscribed MicroServices.
     void sendBroadcast(Broadcast b);
 
     /**
@@ -58,6 +79,9 @@ public interface MessageBus {
      * @return {@link Future<T>} object to be resolved once the processing is complete,
      * 	       null in case no micro-service has subscribed to {@code e.getClass()}.
      */
+
+    // @PRE-CONDITION: The event is valid. At least one MicroService is subscribed to the event.
+    // @POST-CONDITION: The event is sent to the appropriate MicroService, moves him to be ast in line and Future is returned.
     <T> Future<T> sendEvent(Event<T> e);
 
     /**
@@ -65,6 +89,9 @@ public interface MessageBus {
      * <p>
      * @param m the micro-service to create a queue for.
      */
+
+    // @PRE-CONDITION: The MicroService has not been registered.
+    // @POST-CONDITION: A new queue is created for the MicroService.
     void register(MicroService m);
 
     /**
@@ -75,6 +102,9 @@ public interface MessageBus {
      * <p>
      * @param m the micro-service to unregister.
      */
+
+    // @PRE-CONDITION: The MicroService has been registered and is not processing messages.
+    // @POST-CONDITION: The MicroService is removed from the list of registered MicroServices, and no queues exist for it.
     void unregister(MicroService m);
 
     /**
@@ -92,6 +122,9 @@ public interface MessageBus {
      * @throws InterruptedException if interrupted while waiting for a message
      *                              to became available.
      */
+
+    // @PRE-CONDITION: The MicroService is registered.
+    // @POST-CONDITION: The MicroService waits until a message is available and then it is added to its queue and returned.
     Message awaitMessage(MicroService m) throws InterruptedException;
     
 }
